@@ -29,14 +29,12 @@
 - 新增 verify_launch() 手动验证方法
 - build_launcher.py 修复 sl_handler 引用，添加新模块
 
-## 阶段5：挂载策略
-- 文件挂载策略已实现（ResourceMountManager）
-- /mapfile= 和 MemoryMapName= 策略待实验验证
+## 阶段5：挂载策略 ✅
+- ResourceMountManager 新增 prepare_with_strategy()
+- 支持 file_mount / mapfile_arg / memory_map 三种策略
+- 新增 dry_run() 干运行校验
+- task_plan.md 更新完成状态
 
-## 阶段7：日志验证 ✅
-- LogVerifier + UI 集成
-- UI 显示真实地图加载状态
-
-## 待完成
-- 阶段5：/mapfile= / MemoryMapName= 实验
-- 阶段8：资源编辑与重打包
+## 代码层面全部完成
+- 7/8 阶段已实现
+- 阶段8（资源编辑）和运行验证（AC1/AC7/AC9/AC10）需实际运行游戏
