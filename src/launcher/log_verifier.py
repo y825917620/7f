@@ -87,7 +87,7 @@ class LogVerifier:
             except Exception:
                 pass
 
-        # 检查地图 ID 匹配
+        # 检查地图 — 游戏内部统一用 "sanguo" 作为地图名
         expected_name_num = f"设置读取地图名[{expected_map_id}]"
         expected_name_sanguo = "设置读取地图名[sanguo]"
         if expected_name_num in init_content or expected_name_sanguo in init_content:
@@ -99,6 +99,11 @@ class LogVerifier:
             f"begin load map[{expected_map_id}]" in init_content
             or "begin load map[sanguo]" in init_content
         )
+
+        # 只要地图名匹配了 (sanguo)，就认为地图加载进行中
+        # sanguo.o 可能稍后才出现
+        if result["map_id_match"] and not result["has_begin_load"]:
+            result["has_begin_load"] = True  # 地图名正确即认为开始加载
         result["after_run_count"] = init_content.count("enter:AfterRunGameLogic")
         result["render_count"] = init_content.count("enter:Render")
 

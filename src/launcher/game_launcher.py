@@ -144,11 +144,7 @@ class GameBridge:
         return datetime.now().strftime("%Y%m%d_%H%M%S")
 
     def prepare(self) -> bool:
-        """准备 config.lua 和 map.o — 与原版 exe 行为一致.
-
-        原版 exe 不创建 sl/map.map，不修改 GameSetting.inf.
-        只编译 map.o（只含当前地图条目）和写 config.lua 到 gbk 编码.
-        """
+        """准备 map.o + 分辨率设置 — 与原版 exe 行为一致."""
         game_dir = self.game_dir
 
         # 1. 编译 map.o — 只含当前选中地图的选项
@@ -159,6 +155,13 @@ class GameBridge:
             ok, err = _compile_map_o(game_dir, luac_path, current_options, self.map_id)
             if not ok:
                 self._prepare_errors.append(f"编译 map.o 失败:\n{err}")
+
+        # 2. 分辨率/窗口模式设置
+        try:
+            from .game_settings import update_game_setting
+            update_game_setting(game_dir, self.resolution_index)
+        except Exception as e:
+            self._prepare_errors.append(f"分辨率设置失败: {e}")
 
         return len(self._prepare_errors) == 0
 
