@@ -70,7 +70,7 @@ def _compile_map_o(game_dir: Path, luac_path: Path,
                    current_options: dict, selected_map: int) -> tuple:
     """编译 map.o — 包含所有地图的默认选项（与原版 exe 2539 字节产物一致）."""
     try:
-        g_map_display = 0
+        g_map_display = 1  # 原版 map.o 确认为 1
 
         # 包含所有 DEFAULT_MAP_OPTIONS，确保游戏正确初始化本地单机模式
         g_map_opt = {}
@@ -250,8 +250,25 @@ class GameBridge:
         return None
 
     def prepare(self) -> bool:
-        """不写任何文件 — 使用已有 edt2.o/map.o/GameSetting.inf."""
-        return True
+        """写入 config.lua + 编译 edt2.o + 编译 map.o."""
+        game_dir = self.game_dir
+
+        ok, err = _write_config_lua(game_dir, self.map_id, self.options)
+        if not ok:
+            self._prepare_errors.append(err)
+
+        luac_path = _find_luac(game_dir)
+        if luac_path:
+            map_offset = self.map_id - 10000
+            current_options = {map_offset: self.options} if self.options else {}
+            ok, err = _compile_map_o(game_dir, luac_path, current_options, self.map_id)
+            if not ok:
+                self._prepare_errors.append(f"编译 map.o 失败:\n{err}")
+            ok, err = _compile_edt2(game_dir, luac_path, self.map_id, self.options)
+            if not ok:
+                self._prepare_errors.append(err)
+
+        return len(self._prepare_errors) == 0
 
     def launch(self) -> tuple:
         """创建游戏进程 — 带启动信息 SHM + NUL 重定向（不含登录 SHM，避免重连 UI）."""
