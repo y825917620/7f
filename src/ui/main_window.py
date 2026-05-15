@@ -578,7 +578,7 @@ class LauncherWindow(QMainWindow):
         QMessageBox.information(self, "config.lua 预览", f"<pre>{lua}</pre>")
 
     def _launch_game(self):
-        """启动游戏 — ResourceControlService 编排 + 完整诊断."""
+        """启动游戏 — 匹配原版 exe 行为：只编译 map.o + CreateProcess."""
         if self.selected_map is None:
             QMessageBox.warning(self, "提示", "请先选择一张地图")
             return
@@ -586,7 +586,6 @@ class LauncherWindow(QMainWindow):
         map_id = int(self.selected_map)
         game_dir = Path(self.game_dir).absolute()
 
-        # 检查 game.exe 存在
         game_exe = game_dir / "core" / "game.exe"
         if not game_exe.exists():
             game_exe = game_dir / "game.exe"
@@ -595,39 +594,18 @@ class LauncherWindow(QMainWindow):
             return
 
         options = self._get_current_options()
-        resolution_index = self.resolution_combo.currentIndex()
 
         try:
-            # 使用 ResourceControlService 准备 manifest
-            service = ResourceControlService(game_dir)
-            manifest = service.prepare_launch_manifest(
+            # 简洁启动 — 匹配原版 exe
+            bridge, diag_msg = launch_game(
+                game_dir=game_dir,
                 map_id=map_id,
                 options=options,
-                resolution_index=resolution_index,
+                resolution_index=self.resolution_combo.currentIndex(),
             )
-
-            if not manifest.is_valid():
-                self._show_diag(
-                    "资源准备失败",
-                    "\n".join(manifest.errors),
-                    QMessageBox.Icon.Critical,
-                )
-                return
-
-            # 构建 manifest 摘要
-            manifest_summary = (
-                f"地图ID: {manifest.map_id}\n"
-                f"策略: {manifest.strategy}\n"
-                f"源SL: {manifest.sl_path}\n"
-                f"解包缓存: {manifest.unpacked_path}\n"
-                f"挂载点:\n" + "\n".join(f"  - {p}" for p in manifest.mount_points)
-            )
-
-            bridge, diag_msg = launch_game(manifest)
 
             if bridge is None:
-                full_msg = f"{manifest_summary}\n\n{diag_msg}"
-                self._show_diag("启动失败", full_msg, QMessageBox.Icon.Critical)
+                self._show_diag("启动失败", diag_msg, QMessageBox.Icon.Critical)
                 return
 
             self._last_launch_pid = bridge.process_id
@@ -639,15 +617,13 @@ class LauncherWindow(QMainWindow):
                 f"游戏已启动: {map_name} ({map_id}) | PID={bridge.process_id}"
             )
 
-            # 弹出诊断结果（含 manifest 摘要）
-            full_msg = f"{manifest_summary}\n\n{diag_msg}"
-            self._show_diag(f"启动诊断 — {map_name} ({map_id})", full_msg,
-                           QMessageBox.Icon.Information)
+            if diag_msg:
+                self._show_diag(f"启动诊断 — {map_name} ({map_id})", diag_msg,
+                               QMessageBox.Icon.Information)
 
         except Exception as e:
             import traceback
-            detail = traceback.format_exc()
-            self._show_diag("启动异常", f"{e}\n\n详细信息:\n{detail}",
+            self._show_diag("启动异常", f"{e}\n\n{traceback.format_exc()}",
                            QMessageBox.Icon.Critical)
 
     def _show_diag(self, title: str, message: str, icon):

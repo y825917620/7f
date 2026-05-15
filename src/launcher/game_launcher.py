@@ -33,35 +33,34 @@ def _find_luac(game_dir: Path) -> Optional[Path]:
 
 def _compile_map_o(game_dir: Path, luac_path: Path,
                    current_options: dict, selected_map: int) -> tuple:
-    """从当前选项动态编译 map.o — 严格匹配原启动器字节码.
+    """编译 map.o — 只包含当前选中地图的选项（与原版 exe 产物一致）.
 
-    原版逻辑:
-      g_map_display = 1
-      g_map_opt = dict(DEFAULT_MAP_OPTIONS)
-      遍历 current_options，只覆盖 len(values)==11 的条目
-      luac -s -o map.o tmp.lua  (注意 -s 去除调试符号)
+    原版 map.o (202 bytes):
+      g_map_display = 0
+      g_map_opt = {offset: [11 values]}  # 只有 1 个条目
     """
     try:
-        g_map_display = 1  # 原版是 1，不是 0
+        g_map_display = 0  # 原版产物确认为 0
 
-        # 从 DEFAULT_MAP_OPTIONS 开始
+        # 只包含当前选中地图的选项
+        map_offset = selected_map - 10000
         g_map_opt = {}
-        for offset, values in DEFAULT_MAP_OPTIONS.items():
-            g_map_opt[offset] = list(values)
+        if current_options and map_offset in current_options:
+            values = current_options[map_offset]
+            if len(values) == 11:
+                g_map_opt[map_offset] = list(values)
 
-        # current_options 中只有 len==11 的才覆盖
-        if current_options:
-            for offset, values in current_options.items():
-                if values and len(values) == 11:
-                    g_map_opt[offset] = list(values)
+        # 如果没找到选项，用默认值
+        if not g_map_opt:
+            default = DEFAULT_MAP_OPTIONS.get(map_offset, [-1]*10 + [0])
+            g_map_opt[map_offset] = list(default)
 
         lua_src = generate_map_opt_lua(g_map_display, g_map_opt)
 
         map_o_path = game_dir / "map.o"
         tmp_path = map_o_path.with_suffix(".lua.tmp")
-        tmp_path.write_text(lua_src, encoding="gbk")  # 原版用 gbk
+        tmp_path.write_text(lua_src, encoding="gbk")
 
-        # 原版: luac -s -o map.o tmp.lua  (有 -s 参数)
         result = subprocess.run(
             [str(luac_path), "-s", "-o", str(map_o_path), str(tmp_path)],
             capture_output=True, text=True, timeout=10
@@ -70,11 +69,7 @@ def _compile_map_o(game_dir: Path, luac_path: Path,
 
         if result.returncode != 0:
             return False, f"luac 编译 map.o 失败:\n{result.stderr[:500]}"
-        if not map_o_path.exists() or map_o_path.stat().st_size == 0:
-            return False, "map.o 编译产物为空"
         return True, ""
-    except FileNotFoundError:
-        return False, f"找不到 luac 编译器: {luac_path}"
     except Exception as e:
         return False, f"编译 map.o 异常: {e}"
 
@@ -152,31 +147,14 @@ class GameBridge:
         return datetime.now().strftime("%Y%m%d_%H%M%S")
 
     def prepare(self) -> bool:
-        """准备 config.lua, map.o, GameSetting.inf.
+        """准备 config.lua 和 map.o — 与原版 exe 行为一致.
 
-        不做资源解压（资源已由 ResourceMountManager 挂载）。
+        原版 exe 不创建 sl/map.map，不修改 GameSetting.inf.
+        只编译 map.o（只含当前地图条目）和写 config.lua 到 gbk 编码.
         """
         game_dir = self.game_dir
 
-        # 1. 生成并写入 config.lua
-        try:
-            config_lua = generate_config_lua(self.map_id, self.options, game_dir=game_dir)
-            (game_dir / "config.lua").write_text(config_lua, encoding="gbk")
-        except Exception as e:
-            self._prepare_errors.append(f"写入 config.lua 失败: {e}")
-            return False
-
-        # 2. GameSetting.inf 行数验证
-        setting_path = game_dir / "GameSetting.inf"
-        try:
-            lines = setting_path.read_text(encoding="gbk", errors="ignore").splitlines()
-            if len(lines) < 21:
-                self._prepare_errors.append(f"GameSetting.inf 少于 21 行 (当前 {len(lines)} 行)")
-                return False
-        except Exception as e:
-            self._prepare_errors.append(f"读取 GameSetting.inf 失败: {e}")
-
-        # 3. 编译 map.o
+        # 1. 编译 map.o — 只含当前选中地图的选项
         luac_path = _find_luac(game_dir)
         if luac_path:
             map_offset = self.map_id - 10000
@@ -184,22 +162,6 @@ class GameBridge:
             ok, err = _compile_map_o(game_dir, luac_path, current_options, self.map_id)
             if not ok:
                 self._prepare_errors.append(f"编译 map.o 失败:\n{err}")
-
-        # 4. 更新 GameSetting.inf
-        try:
-            from .game_settings import update_game_setting
-            update_game_setting(game_dir, self.resolution_index)
-        except Exception as e:
-            self._prepare_errors.append(f"更新 GameSetting.inf 失败: {e}")
-
-        # 5. 保存 launch_manifest.json
-        logs_dir = game_dir / "launcher_logs"
-        logs_dir.mkdir(parents=True, exist_ok=True)
-        manifest_path = logs_dir / f"launch_{self.map_id}_{self._process_safe_timestamp()}.json"
-        try:
-            self.manifest.save(manifest_path)
-        except Exception as e:
-            self._prepare_errors.append(f"保存 launch_manifest.json 失败: {e}")
 
         return len(self._prepare_errors) == 0
 
@@ -313,16 +275,14 @@ class GameBridge:
         return self._process_info["hProcess"] if self._process_info else None
 
 
-def launch_game(manifest: MapLaunchManifest) -> tuple:
-    """使用 manifest 启动游戏.
+def launch_game(game_dir: Path, map_id: int, options: list,
+                resolution_index: int = 0) -> tuple:
+    """简洁启动入口 — 匹配原版 exe 行为.
 
-    Returns:
-        (GameBridge 或 None, 诊断消息)
+    原版流程: config.lua + map.o + CreateProcess.
+    不创建 sl/map.map，不修改 GameSetting.inf.
     """
-    if not manifest.is_valid():
-        return None, "Manifest 无效:\n" + "\n".join(manifest.errors)
-
-    bridge = GameBridge(manifest)
+    bridge = GameBridge(game_dir, map_id, options, resolution_index)
 
     if not bridge.prepare():
         return None, "准备失败:\n" + "\n".join(bridge._prepare_errors)
@@ -332,17 +292,15 @@ def launch_game(manifest: MapLaunchManifest) -> tuple:
         return None, f"启动失败:\n{err}"
 
     diag = diagnose_launch(bridge.game_dir, bridge.process_id, bridge.map_id)
-    messages = [f"[策略] {manifest.strategy}"]
-    if manifest.mount_points:
-        messages.append(f"[挂载点]\n" + "\n".join(f"  - {p}" for p in manifest.mount_points))
+    messages = []
 
     if diag["stages"]:
-        messages.append("[游戏初始化阶段]\n" + "\n".join(f"  [OK] {s}" for s in diag["stages"]))
+        messages.append("[游戏初始化]\n" + "\n".join(f"  [OK] {s}" for s in diag["stages"]))
     if diag["errors"]:
-        messages.append("[诊断发现问题]\n" + "\n".join(f"  [ERR] {e}" for e in diag["errors"]))
+        messages.append("[诊断问题]\n" + "\n".join(f"  [ERR] {e}" for e in diag["errors"]))
     if diag.get("failure_kind"):
         messages.append(f"[失败类型] {diag['failure_kind']}")
     if diag["error_log_tail"]:
-        messages.append(f"[游戏错误日志尾部]\n{diag['error_log_tail'][:1000]}")
+        messages.append(f"[错误日志]\n{diag['error_log_tail'][:1000]}")
 
     return bridge, "\n\n".join(messages)
