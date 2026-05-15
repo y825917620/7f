@@ -11,7 +11,8 @@ from PyQt6.QtWidgets import (
     QLabel, QPushButton, QComboBox, QTabWidget, QGroupBox, QGridLayout,
     QMessageBox, QStatusBar, QMenuBar, QMenu, QFileDialog, QDialog,
     QRadioButton, QButtonGroup, QLineEdit, QTextBrowser, QCheckBox,
-    QSplitter, QTableWidget, QTableWidgetItem, QHeaderView, QScrollArea
+    QSplitter, QTableWidget, QTableWidgetItem, QHeaderView, QScrollArea,
+    QPlainTextEdit
 )
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QIcon, QPixmap, QFont, QAction
@@ -26,7 +27,7 @@ from .sponsor_widgets import (
     SPONSOR_URLS, QQ_GROUP, VIP_PRODUCTS,
     VersionCheckThread, SponsorSettingsDialog,
 )
-from ..launcher.game_launcher import GameBridge, launch_game
+from ..launcher.game_launcher import GameBridge, launch_game, diagnose_launch
 from ..launcher.game_settings import update_game_setting
 from ..launcher.log_verifier import LogVerifier
 
@@ -576,7 +577,7 @@ class LauncherWindow(QMainWindow):
         QMessageBox.information(self, "config.lua 预览", f"<pre>{lua}</pre>")
 
     def _launch_game(self):
-        """启动游戏 — 移植自原启动器的完整启动流程."""
+        """启动游戏 — 完整诊断信息弹窗."""
         if self.selected_map is None:
             QMessageBox.warning(self, "提示", "请先选择一张地图")
             return
@@ -589,15 +590,13 @@ class LauncherWindow(QMainWindow):
         if not game_exe.exists():
             game_exe = game_dir / "game.exe"
         if not game_exe.exists():
-            QMessageBox.critical(self, "启动错误", f"找不到游戏文件: {game_exe}")
+            QMessageBox.critical(self, "启动错误", f"找不到游戏文件:\n{game_exe}")
             return
 
-        # 获取当前选项
         options = self._get_current_options()
 
         try:
-            # GameBridge 内部处理全部资源准备和进程创建
-            bridge = launch_game(
+            bridge, diag_msg = launch_game(
                 game_dir=game_dir,
                 map_id=map_id,
                 options=options,
@@ -605,56 +604,66 @@ class LauncherWindow(QMainWindow):
             )
 
             if bridge is None:
-                QMessageBox.critical(self, "启动错误", "CreateProcess 失败")
+                self._show_diag("启动失败", diag_msg, QMessageBox.Icon.Critical)
                 return
 
             self._last_launch_pid = bridge.process_id
             self._game_process_handle = bridge.process_handle
 
             info = MAP_INFO.get(self.selected_map, {})
+            map_name = info.get("name", str(map_id))
             self.statusbar.showMessage(
-                f"游戏已启动: {info.get('name', '地图')} ({self.selected_map}) | "
-                f"PID={bridge.process_id}"
+                f"游戏已启动: {map_name} ({map_id}) | PID={bridge.process_id}"
             )
 
+            # 弹出诊断结果
+            if diag_msg:
+                self._show_diag(f"启动诊断 — {map_name} ({map_id})", diag_msg,
+                               QMessageBox.Icon.Information)
+
         except Exception as e:
-            QMessageBox.critical(self, "启动错误", str(e))
+            import traceback
+            detail = traceback.format_exc()
+            self._show_diag("启动异常", f"{e}\n\n详细信息:\n{detail}",
+                           QMessageBox.Icon.Critical)
+
+    def _show_diag(self, title: str, message: str, icon):
+        """在可滚动对话框中展示诊断信息."""
+        dlg = QDialog(self)
+        dlg.setWindowTitle(title)
+        dlg.setMinimumSize(550, 400)
+
+        layout = QVBoxLayout(dlg)
+
+        if icon == QMessageBox.Icon.Critical:
+            layout.addWidget(QLabel("<b style='color:red;'>启动失败</b>"))
+        elif "失败" in message or "错误" in message:
+            layout.addWidget(QLabel("<b style='color:orange;'>诊断发现问题</b>"))
+        else:
+            layout.addWidget(QLabel("<b>启动诊断报告</b>"))
+
+        text = QPlainTextEdit()
+        text.setReadOnly(True)
+        text.setPlainText(message)
+        text.setStyleSheet("font-family: Microsoft YaHei, Consolas, monospace; font-size: 12px;")
+        layout.addWidget(text)
+
+        btn = QPushButton("确定")
+        btn.clicked.connect(dlg.accept)
+        layout.addWidget(btn)
+
+        dlg.exec()
 
     def verify_launch(self):
         """手动触发启动验证."""
-        manifest = getattr(self, "_last_launch_manifest", None)
-        if manifest is None:
+        pid = getattr(self, "_last_launch_pid", None)
+        if pid is None:
             QMessageBox.information(self, "验证", "没有可验证的启动记录")
             return
 
-        verifier = LogVerifier(self.game_dir)
-        log_dir = verifier.find_latest_log_dir()
-
-        if log_dir is None:
-            QMessageBox.warning(self, "验证结果", "未找到游戏日志目录，游戏可能尚未初始化")
-            return
-
-        result = verifier.verify(manifest.map_id, log_dir)
-
-        if result["ok"]:
-            msg = (
-                f"✅ 地图加载成功!\n\n"
-                f"地图 ID: {manifest.map_id}\n"
-                f"日志目录: {log_dir.name}\n"
-                f"Render 计数: {result['render_count']}\n"
-                f"AfterRun 计数: {result['after_run_count']}"
-            )
-        else:
-            err_lines = "\n".join(f"  - {e}" for e in result["errors"])
-            msg = (
-                f"❌ 地图加载未完成\n\n"
-                f"地图 ID: {manifest.map_id}\n"
-                f"日志目录: {log_dir.name}\n"
-                f"错误:\n{err_lines}\n\n"
-                f"请查看完整日志: {log_dir / 'init.log'}"
-            )
-
-        QMessageBox.information(self, "启动验证结果", msg)
+        diag = diagnose_launch(self.game_dir, pid, self.selected_map, timeout_seconds=5)
+        self._show_diag("启动验证结果", diag.get("user_message", str(diag)),
+                       QMessageBox.Icon.Information)
 
     def _check_version(self):
         self.statusbar.showMessage("正在检查版本更新...")
