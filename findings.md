@@ -52,8 +52,29 @@
 
 1. ✅ `.sl` 文件 LZMA 解压 — 全地图通用算法
 2. ✅ LuaRDGTM 头结构 — 128 段元数据 + 主地图数据
-3. ✅ 游戏自行加载 .sl — 不需要启动器做文件挂载
-4. ✅ `sl/map.map` 文件挂载策略是**错误**的 — 反而干扰游戏
+3. ✅ **sl/map.map 是虚拟文件系统** — 游戏从中读取 map/sanguo/sanguo.o 等资源
+4. ✅ 启动器需动态编译 map.o + edt2.o（Lua 字节码）
 5. ✅ `MemoryMapName=sanguo` 不是默认加载路径
-6. ✅ 启动器只需: SHM(mode_id) + 管道(PID/TID/map_id) + NUL重定向
+6. ✅ 启动器完整流程: config.lua → edt2.o → map.o → GameSetting.inf → sl/map.map → SHM + 管道 + CreateProcess
 7. ✅ `tab_interface nil` 仅发生在终端启动 — GUI 启动正常
+
+## 原启动器完整启动流程 (反汇编证实)
+
+```
+launch_game(selected_map, game_dir, options):
+  1. 检查 game.exe 存在 (core/game.exe 或 game.exe)
+  2. 生成 config.lua (从选项)
+  3. 写入 data/config.lua (GBK 编码)
+  4. _find_luac() → 找到 luac5.1.exe
+  5. _compile_edt2() → 编译 data/core/edt2.o
+  6. _compile_map_o() → 编译 data/map.o (含 DEFAULT_MAP_OPTIONS)
+  7. update_game_setting() → 更新 GameSetting.inf
+  8. _ensure_sl_map() → 解压 map/{id}.sl → sl/map.map
+  9. CreateMutexA("7fxx_dgtm")
+  10. CreateFileMappingA("7fgame_game_client_start_info") + 写入 map_id
+  11. CreateFileMappingA("7fgame_game_client_login") + 写入 "localplayer"
+  12. CreatePipe + CreateFileA("NUL")
+  13. CreateProcessA(game.exe, map_id, cwd=game_dir)
+  14. WriteFile(pipe, [PID, TID, map_id, 0])
+  15. 启动对话框监控线程
+```

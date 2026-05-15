@@ -1,92 +1,196 @@
 # -*- coding: utf-8 -*-
-"""GameBridge — 统一向游戏注入启动参数与资源.
+"""GameBridge — 移植自原启动器的完整启动逻辑.
 
-所有启动参数（命令行、共享内存、管道）必须来自 MapLaunchManifest，
-不再硬编码任何地图 ID 或文件路径。
+原启动器 launch_game 流程:
+  1. 生成 config.lua
+  2. 找到 luac5.1 编译器
+  3. 编译 edt2.o (Lua 源码 -> 字节码)
+  4. 编译 map.o (从当前选项动态生成)
+  5. 更新 GameSetting.inf
+  6. 解压 .sl -> sl/map.map (虚拟文件系统)
+  7. 创建互斥体 + 共享内存
+  8. CreateProcessA + 管道数据
 """
 
-import os
 import ctypes
 from ctypes import wintypes
+import lzma
+import os
 import struct
+import subprocess
 import time
 from pathlib import Path
 from typing import Optional
 
-from ..core.map_launch_manifest import MapLaunchManifest
+from ..core.config_generator import generate_config_lua, generate_edt2_lua, generate_map_opt_lua
+from ..data.map_data import DEFAULT_MAP_OPTIONS
 
+
+# === Lua 编译器 ===
+
+def _find_luac(game_dir: Path) -> Optional[Path]:
+    """找到 luac5.1.exe 编译器."""
+    candidates = [
+        game_dir.parent / "lua51_bin" / "luac5.1.exe",
+        game_dir.parent.parent / "lua51_bin" / "luac5.1.exe" if game_dir.parent.parent else None,
+        Path(__file__).parent.parent.parent / "lua51_bin" / "luac5.1.exe",
+    ]
+    for c in candidates:
+        if c and c.exists():
+            return c.resolve()
+    return None
+
+
+def _compile_edt2(config_lua: str, output_path: Path, luac_path: Path) -> bool:
+    """将生成的 Lua 源码编译为 edt2.o 字节码."""
+    try:
+        tmp_path = output_path.with_suffix(".lua")
+        tmp_path.write_text(config_lua, encoding="utf-8")
+        result = subprocess.run(
+            [str(luac_path), "-o", str(output_path), str(tmp_path)],
+            capture_output=True, text=True, timeout=10
+        )
+        tmp_path.unlink(missing_ok=True)
+        return result.returncode == 0 and output_path.exists() and output_path.stat().st_size > 0
+    except Exception:
+        return False
+
+
+def _compile_map_o(game_dir: Path, luac_path: Path,
+                   current_options: dict, selected_map: int) -> bool:
+    """从当前选项动态编译 map.o."""
+    try:
+        g_map_display = 0
+        g_map_opt = {}
+        for offset, values in DEFAULT_MAP_OPTIONS.items():
+            if offset in current_options:
+                g_map_opt[offset] = current_options[offset]
+            else:
+                g_map_opt[offset] = list(values)
+
+        lua_src = generate_map_opt_lua(g_map_display, g_map_opt)
+        tmp_path = game_dir / "map_tmp.lua"
+        tmp_path.write_text(lua_src, encoding="utf-8")
+
+        map_o_path = game_dir / "map.o"
+        result = subprocess.run(
+            [str(luac_path), "-o", str(map_o_path), str(tmp_path)],
+            capture_output=True, text=True, timeout=10
+        )
+        tmp_path.unlink(missing_ok=True)
+        return result.returncode == 0 and map_o_path.exists() and map_o_path.stat().st_size > 0
+    except Exception:
+        return False
+
+
+def _ensure_sl_map(game_dir: Path, map_id: int) -> bool:
+    """从 map/{map_id}.sl 解压生成 sl/map.map (虚拟文件系统).
+
+    原启动器会在启动游戏前检查 sl/map.map 是否存在，
+    若不存在则从对应的 .sl 文件解压生成。
+    游戏将 sl/map.map 作为虚拟文件系统，从中读取 map/sanguo/sanguo.o 等资源。
+    """
+    try:
+        sl_dir = game_dir / "sl"
+        sl_dir.mkdir(exist_ok=True)
+        map_map = sl_dir / "map.map"
+
+        sl_file = game_dir / "map" / f"{map_id}.sl"
+        if not sl_file.exists():
+            return False
+
+        data = sl_file.read_bytes()
+        decompressed = lzma.decompress(data)
+        map_map.write_bytes(decompressed)
+        return True
+    except Exception:
+        return False
+
+
+# === GameBridge ===
 
 class GameBridge:
-    """接收 MapLaunchManifest，统一向游戏进程注入全部启动参数."""
+    """接收地图参数，执行完整启动流程."""
 
-    def __init__(self, manifest: MapLaunchManifest):
-        if not manifest.is_valid():
-            raise ValueError(f"Manifest 无效: {'; '.join(manifest.errors)}")
-        self.manifest = manifest
-        self.game_dir = manifest.game_dir
+    def __init__(self, game_dir: Path, map_id: int,
+                 options: list, resolution_index: int = 0):
+        self.game_dir = Path(game_dir)
+        self.map_id = int(map_id)
+        self.options = list(options)
+        self.resolution_index = resolution_index
         self._handles = {}
         self._process_info = None
 
+    def prepare(self) -> bool:
+        """准备所有资源（config, edt2.o, map.o, GameSetting, sl/map.map）."""
+        game_dir = self.game_dir
+
+        # 1. 生成并写入 config.lua
+        config_lua = generate_config_lua(self.map_id, self.options, game_dir=game_dir)
+        (game_dir / "config.lua").write_text(config_lua, encoding="gbk")
+
+        # 2. 找到 lua 编译器
+        luac_path = _find_luac(game_dir)
+        if luac_path is None:
+            print("[WARN] 未找到 luac5.1.exe，跳过字节码编译")
+
+        # 3. 编译 edt2.o
+        if luac_path:
+            edt2_lua = generate_edt2_lua(self.map_id, self.options, game_dir=game_dir)
+            _compile_edt2(edt2_lua, game_dir / "core" / "edt2.o", luac_path)
+
+        # 4. 编译 map.o
+        if luac_path:
+            _compile_map_o(game_dir, luac_path, {}, self.map_id)
+
+        # 5. 更新 GameSetting.inf
+        from .game_settings import update_game_setting
+        update_game_setting(game_dir, self.resolution_index)
+
+        # 6. 确保 sl/map.map (虚拟文件系统)
+        _ensure_sl_map(game_dir, self.map_id)
+
+        return True
+
     def launch(self) -> bool:
-        """执行完整启动流程.
-
-        Returns:
-            bool: 进程是否成功创建.
-        """
-        self._create_mutex()
-        self._create_shared_memory()
-        self._create_pipes()
-        return self._create_process()
-
-    # === 互斥体 ===
-
-    def _create_mutex(self):
+        """创建游戏进程."""
         kernel32 = ctypes.windll.kernel32
+
+        # 互斥体
         kernel32.CreateMutexA.restype = wintypes.HANDLE
         self._handles["mutex"] = kernel32.CreateMutexA(None, False, b"7fxx_dgtm")
 
-    # === 共享内存 ===
-
-    def _create_shared_memory(self):
-        kernel32 = ctypes.windll.kernel32
+        # 共享内存: start_info
         kernel32.CreateFileMappingA.restype = wintypes.HANDLE
         kernel32.MapViewOfFile.restype = ctypes.c_void_p
-        kernel32.UnmapViewOfFile.argtypes = [ctypes.c_void_p]
 
-        map_id = self.manifest.map_id
+        hStart = kernel32.CreateFileMappingA(
+            wintypes.HANDLE(-1), None, 0x04, 0, 512,
+            b"7fgame_game_client_start_info"
+        )
+        if hStart:
+            ptr = kernel32.MapViewOfFile(hStart, 0xF001F, 0, 0, 512)
+            if ptr:
+                ctypes.memset(ptr, 0, 512)
+                ctypes.c_uint32.from_address(ptr).value = self.map_id
+                kernel32.UnmapViewOfFile(ptr)
+        self._handles["shm_start"] = hStart
 
-        shm_configs = [
-            (b"7fgame_game_client_start_info", 512, "uint32", map_id),
-            (b"7fgame_game_client_login", 256, "string", b"localplayer"),
-        ]
+        # 共享内存: login
+        hLogin = kernel32.CreateFileMappingA(
+            wintypes.HANDLE(-1), None, 0x04, 0, 256,
+            b"7fgame_game_client_login"
+        )
+        if hLogin:
+            ptr = kernel32.MapViewOfFile(hLogin, 0xF001F, 0, 0, 256)
+            if ptr:
+                ctypes.memset(ptr, 0, 256)
+                buf = (ctypes.c_char * 256).from_address(ptr)
+                buf.value = b"localplayer"
+                kernel32.UnmapViewOfFile(ptr)
+        self._handles["shm_login"] = hLogin
 
-        self._handles["shm"] = []
-        for name, size, kind, value in shm_configs:
-            hMap = kernel32.CreateFileMappingA(wintypes.HANDLE(-1), None, 0x04, 0, size, name)
-            if not hMap:
-                continue
-            self._handles["shm"].append(hMap)
-            ptr = kernel32.MapViewOfFile(hMap, 0xF001F, 0, 0, size)
-            if not ptr:
-                continue
-            ctypes.memset(ptr, 0, size)
-            if kind == "uint32":
-                ctypes.c_uint32.from_address(ptr).value = value
-            elif kind == "string":
-                buf = (ctypes.c_char * size).from_address(ptr)
-                buf.value = value
-            kernel32.UnmapViewOfFile(ptr)
-
-    # === 管道与 NUL ===
-
-    def _create_pipes(self):
-        kernel32 = ctypes.windll.kernel32
-        kernel32.CreatePipe.argtypes = [
-            ctypes.POINTER(wintypes.HANDLE), ctypes.POINTER(wintypes.HANDLE),
-            ctypes.c_void_p, wintypes.DWORD
-        ]
-        kernel32.CreateFileA.restype = wintypes.HANDLE
-
+        # 管道
         class SECURITY_ATTRIBUTES(ctypes.Structure):
             _fields_ = [
                 ("nLength", wintypes.DWORD),
@@ -106,16 +210,7 @@ class GameBridge:
         OPEN_EXISTING = 3
         hNul = kernel32.CreateFileA(b"NUL", GENERIC_WRITE, 3, None, OPEN_EXISTING, 0x80, None)
 
-        self._handles["pipe_read"] = hRead
-        self._handles["pipe_write"] = hWrite
-        self._handles["nul"] = hNul
-
-    # === 创建进程 ===
-
-    def _create_process(self) -> bool:
-        kernel32 = ctypes.windll.kernel32
-        kernel32.CreateProcessA.restype = wintypes.BOOL
-
+        # STARTUPINFO
         class STARTUPINFOA(ctypes.Structure):
             _fields_ = [
                 ("cb", wintypes.DWORD), ("lpReserved", wintypes.LPSTR),
@@ -139,13 +234,15 @@ class GameBridge:
         si.cb = ctypes.sizeof(si)
         si.dwFlags = 0x101
         si.wShowWindow = 1
-        si.hStdInput = self._handles["pipe_read"]
-        si.hStdOutput = self._handles["nul"]
-        si.hStdError = self._handles["nul"]
+        si.hStdInput = hRead
+        si.hStdOutput = hNul
+        si.hStdError = hNul
 
         game_path = self.game_dir / "core" / "game.exe"
+        if not game_path.exists():
+            game_path = self.game_dir / "game.exe"
         work_dir = str(self.game_dir)
-        cmdline = f'"{game_path}" {self.manifest.map_id}'
+        cmdline = f'"{game_path}" {self.map_id}'
 
         os.environ["PATH"] = str(self.game_dir / "core") + os.pathsep + os.environ.get("PATH", "")
 
@@ -159,32 +256,30 @@ class GameBridge:
         )
 
         if not ok:
-            self._cleanup_handles()
-            return False
+            err = kernel32.GetLastError()
+            kernel32.CloseHandle(hRead)
+            kernel32.CloseHandle(hWrite)
+            if hNul:
+                kernel32.CloseHandle(hNul)
+            raise RuntimeError(f"CreateProcessA 失败 (错误码: {err})")
 
-        # 写入管道数据
-        pipe_data = struct.pack("<4I", pi.dwProcessId, pi.dwThreadId, self.manifest.map_id, 0)
+        kernel32.CloseHandle(hRead)
+
+        # 管道数据
+        pipe_data = struct.pack("<4I", pi.dwProcessId, pi.dwThreadId, self.map_id, 0)
         written = wintypes.DWORD(0)
-        kernel32.WriteFile(self._handles["pipe_write"], pipe_data, len(pipe_data), ctypes.byref(written), None)
+        kernel32.WriteFile(hWrite, pipe_data, len(pipe_data), ctypes.byref(written), None)
+        kernel32.CloseHandle(hWrite)
+        if hNul:
+            kernel32.CloseHandle(hNul)
 
         self._process_info = {
             "pid": pi.dwProcessId,
             "tid": pi.dwThreadId,
             "hProcess": pi.hProcess,
-            "hThread": pi.hThread,
         }
-
-        # 关闭不需要的句柄
         kernel32.CloseHandle(pi.hThread)
-        self._cleanup_handles()
         return True
-
-    def _cleanup_handles(self):
-        kernel32 = ctypes.windll.kernel32
-        for key in ["pipe_read", "pipe_write", "nul"]:
-            h = self._handles.pop(key, None)
-            if h:
-                kernel32.CloseHandle(h)
 
     @property
     def process_id(self) -> Optional[int]:
@@ -199,19 +294,10 @@ class GameBridge:
         return None
 
 
-def launch_game(manifest: MapLaunchManifest) -> Optional[GameBridge]:
-    """使用 manifest 启动游戏.
-
-    Args:
-        manifest: 已验证的 MapLaunchManifest
-
-    Returns:
-        GameBridge 实例（含进程句柄），失败返回 None.
-    """
-    try:
-        bridge = GameBridge(manifest)
-        if bridge.launch():
-            return bridge
-        return None
-    except Exception:
-        return None
+def launch_game(game_dir: Path, map_id: int, options: list,
+                resolution_index: int = 0) -> Optional[GameBridge]:
+    """启动游戏的便捷入口."""
+    bridge = GameBridge(game_dir, map_id, options, resolution_index)
+    bridge.prepare()
+    bridge.launch()
+    return bridge

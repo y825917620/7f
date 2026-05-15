@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
-"""ResourceMountManager — 游戏自行加载 .sl，启动器只需确保文件存在."""
+"""ResourceMountManager — sl/map.map 虚拟文件系统准备.
 
+原启动器流程:
+  1. 从 map/{id}.sl 解压 LuaRDGTM 包
+  2. 写入 sl/map.map (虚拟文件系统)
+  3. 游戏从 sl/map.map 中读取 map/sanguo/sanguo.o 等资源
+"""
+
+import lzma
 from pathlib import Path
 from typing import Optional
 
@@ -10,13 +17,7 @@ from .map_catalog import MapCatalog
 
 
 class ResourceMountManager:
-    """资源就绪检查 — 游戏引擎自行从 map/{id}.sl 加载地图。
-
-    底层研究发现：
-    - game.exe 内部解压 map/{id}.sl 并创建 map/sanguo/sanguo.o
-    - 启动器不需要做文件挂载（sl/map.map 反而会干扰游戏）
-    - 启动器只需确保 .sl 文件存在且可读
-    """
+    """管理 sl/map.map 虚拟文件系统的创建和验证."""
 
     def __init__(self, game_dir: Path, cache_dir: Optional[Path] = None):
         self.game_dir = Path(game_dir)
@@ -24,25 +25,19 @@ class ResourceMountManager:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def prepare(self, map_id: int, sl_path: Path) -> MapLaunchManifest:
-        """验证资源就绪，生成 manifest（不做文件复制）。
-
-        游戏引擎自行从 map/{id}.sl 加载地图数据，
-        启动器只需确保文件存在且格式有效。
-        """
+        """解压 .sl 并写入 sl/map.map."""
         manifest = MapLaunchManifest(
             map_id=map_id,
             game_dir=self.game_dir,
             sl_path=sl_path,
         )
 
-        # 验证 .sl 文件存在
         sl_path = Path(sl_path)
         if not sl_path.exists():
             manifest.add_error(f".sl 文件不存在: {sl_path}")
             manifest.strategy = "missing_sl"
             return manifest
 
-        # 验证 .sl 可解压且为有效 LuaRDGTM
         report = MapPackageAnalyzer.analyze(sl_path)
         if not report["ok"]:
             manifest.add_error(report.get("error") or ".sl 格式验证未通过")
@@ -53,12 +48,28 @@ class ResourceMountManager:
             sl_sha256=report.get("sl_sha256"),
             dec_sha256=report.get("dec_sha256"),
         )
-        manifest.strategy = "game_native"
-        manifest._sl_report = report
+
+        # 解压并写入 sl/map.map (虚拟文件系统)
+        try:
+            sl_dir = self.game_dir / "sl"
+            sl_dir.mkdir(exist_ok=True)
+            map_map = sl_dir / "map.map"
+
+            data = sl_path.read_bytes()
+            decompressed = lzma.decompress(data)
+            map_map.write_bytes(decompressed)
+
+            manifest.unpacked_path = map_map
+            manifest.mount_points = [map_map]
+            manifest.strategy = "sl_vfs"
+        except Exception as e:
+            manifest.add_error(f"解压 sl/map.map 失败: {e}")
+            manifest.strategy = "decompress_failed"
+
         return manifest
 
     def dry_run(self, map_id: int, sl_path: Path) -> dict:
-        """校验报告，不做任何文件操作."""
+        """校验报告，不做文件操作."""
         catalog = MapCatalog(self.game_dir)
         return {
             "map_id": map_id,

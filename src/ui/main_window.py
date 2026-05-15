@@ -26,9 +26,6 @@ from .sponsor_widgets import (
     SPONSOR_URLS, QQ_GROUP, VIP_PRODUCTS,
     VersionCheckThread, SponsorSettingsDialog,
 )
-from ..core.map_catalog import MapCatalog
-from ..core.resource_mount_manager import ResourceMountManager
-from ..core.resource_workspace import ResourceWorkspace
 from ..launcher.game_launcher import GameBridge, launch_game
 from ..launcher.game_settings import update_game_setting
 from ..launcher.log_verifier import LogVerifier
@@ -579,64 +576,49 @@ class LauncherWindow(QMainWindow):
         QMessageBox.information(self, "config.lua 预览", f"<pre>{lua}</pre>")
 
     def _launch_game(self):
-        """启动游戏 — manifest 驱动，游戏引擎自行加载 .sl 资源."""
+        """启动游戏 — 移植自原启动器的完整启动流程."""
         if self.selected_map is None:
             QMessageBox.warning(self, "提示", "请先选择一张地图")
             return
 
         map_id = int(self.selected_map)
-        abs_game_dir = Path(self.game_dir).absolute()
+        game_dir = Path(self.game_dir).absolute()
 
-        # 1. 检查地图资源完整性
-        catalog = MapCatalog(abs_game_dir)
-        info = catalog.get_info(map_id)
-        if info is None:
-            QMessageBox.critical(self, "启动错误",
-                f"未找到地图 {map_id} 的资源文件\n\n"
-                f"请确认以下文件存在:\n"
-                f"  {abs_game_dir / 'map' / f'{map_id}.map'}\n"
-                f"  {abs_game_dir / 'map' / f'{map_id}.sl'}")
+        # 检查 game.exe 存在
+        game_exe = game_dir / "core" / "game.exe"
+        if not game_exe.exists():
+            game_exe = game_dir / "game.exe"
+        if not game_exe.exists():
+            QMessageBox.critical(self, "启动错误", f"找不到游戏文件: {game_exe}")
             return
 
-        diag = catalog.diagnose(map_id)
-        if diag:
-            QMessageBox.critical(self, "启动错误", diag)
-            return
+        # 获取当前选项
+        options = self._get_current_options()
 
-        # 2. 资源验证（游戏自行从 map/{id}.sl 加载，启动器不做文件挂载）
-        mount_mgr = ResourceMountManager(abs_game_dir)
-        manifest = mount_mgr.prepare(map_id, info["sl_path"])
-        if not manifest.is_valid():
-            err_msg = "\n".join(manifest.errors) if manifest.errors else "地图资源验证失败"
-            QMessageBox.critical(self, "启动错误", err_msg)
-            return
+        try:
+            # GameBridge 内部处理全部资源准备和进程创建
+            bridge = launch_game(
+                game_dir=game_dir,
+                map_id=map_id,
+                options=options,
+                resolution_index=self.resolution_combo.currentIndex(),
+            )
 
-        # 3. 确保 map/sanguo/ 目录存在（游戏将在此写入解包后的 sanguo.o）
-        sanguo_dir = abs_game_dir / "map" / "sanguo"
-        sanguo_dir.mkdir(parents=True, exist_ok=True)
+            if bridge is None:
+                QMessageBox.critical(self, "启动错误", "CreateProcess 失败")
+                return
 
-        # 4. 保存 manifest 用于诊断
-        manifest_dir = abs_game_dir.parent / "launcher_logs"
-        manifest_dir.mkdir(parents=True, exist_ok=True)
-        manifest_path = manifest_dir / f"manifest_{map_id}_{int(time.time())}.json"
-        manifest.save(manifest_path)
+            self._last_launch_pid = bridge.process_id
+            self._game_process_handle = bridge.process_handle
 
-        # 5. 启动游戏
-        bridge = launch_game(manifest)
-        if bridge is None:
-            QMessageBox.critical(self, "启动错误", "CreateProcess 失败，请检查游戏文件完整性")
-            return
+            info = MAP_INFO.get(self.selected_map, {})
+            self.statusbar.showMessage(
+                f"游戏已启动: {info.get('name', '地图')} ({self.selected_map}) | "
+                f"PID={bridge.process_id}"
+            )
 
-        # 6. 保存启动上下文
-        self._last_launch_manifest = manifest
-        self._last_launch_pid = bridge.process_id
-        self._game_process_handle = bridge.process_handle
-
-        info = MAP_INFO.get(self.selected_map, {})
-        self.statusbar.showMessage(
-            f"游戏已启动: {info.get('name', '地图')} ({self.selected_map}) | "
-            f"PID={bridge.process_id} | manifest: {manifest_path.name}"
-        )
+        except Exception as e:
+            QMessageBox.critical(self, "启动错误", str(e))
 
     def verify_launch(self):
         """手动触发启动验证."""
