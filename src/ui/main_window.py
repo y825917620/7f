@@ -578,7 +578,7 @@ class LauncherWindow(QMainWindow):
         QMessageBox.information(self, "config.lua 预览", f"<pre>{lua}</pre>")
 
     def _launch_game(self):
-        """启动游戏 — 极简：不写文件，只 SHM + CreateProcess."""
+        """启动游戏."""
         if self.selected_map is None:
             QMessageBox.warning(self, "提示", "请先选择一张地图")
             return
@@ -596,19 +596,30 @@ class LauncherWindow(QMainWindow):
         options = self._get_current_options()
 
         try:
-            bridge = GameBridge(game_dir, map_id, options,
-                              self.resolution_combo.currentIndex())
-            bridge.prepare()
-            ok, err = bridge.launch()
-            if not ok:
-                self._show_diag("启动失败", err, QMessageBox.Icon.Critical)
+            service = ResourceControlService(game_dir)
+            manifest = service.prepare_launch_manifest(map_id, options,
+                self.resolution_combo.currentIndex())
+            if not manifest.is_valid():
+                self._show_diag("资源准备失败", "\n".join(manifest.errors),
+                               QMessageBox.Icon.Critical)
                 return
 
+            bridge, diag_msg = launch_game(manifest)
+            if bridge is None:
+                self._show_diag("启动失败", diag_msg, QMessageBox.Icon.Critical)
+                return
+
+            self._last_launch_pid = bridge.process_id
+            self._game_process_handle = bridge.process_handle
+
             info = MAP_INFO.get(self.selected_map, {})
-            map_name = info.get("name", str(map_id))
             self.statusbar.showMessage(
-                f"游戏已启动: {map_name} ({map_id}) | PID={bridge.process_id}"
+                f"游戏已启动: {info.get('name', str(map_id))} ({map_id}) | PID={bridge.process_id}"
             )
+
+            if diag_msg:
+                self._show_diag(f"启动诊断 — {info.get('name', str(map_id))} ({map_id})",
+                               diag_msg, QMessageBox.Icon.Information)
 
         except Exception as e:
             import traceback
