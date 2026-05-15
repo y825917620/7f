@@ -22,10 +22,9 @@ def _atomic_write(path: Path, data: bytes) -> None:
 class ResourceMountManager:
     """管理 sl/map.map 虚拟文件系统的创建和验证."""
 
-    # 双挂载点（相对于 game_dir）
+    # 挂载点 — 只写 sl/map.map（匹配原版 _ensure_sl_map）
     MOUNT_POINTS = [
         Path("sl") / "map.map",
-        Path("core") / "sl" / "map.map",
     ]
 
     def __init__(self, game_dir: Path, cache_dir: Optional[Path] = None):
@@ -60,12 +59,22 @@ class ResourceMountManager:
             manifest.strategy = "invalid_sl"
             return manifest
 
-        # 解压
-        decompressed = MapPackageAnalyzer.decompress(sl_path)
-        if decompressed is None:
-            manifest.add_error("LZMA 解压返回 None")
-            manifest.strategy = "decompress_failed"
-            return manifest
+        # 解压 — 优先用原版方式 lzma.decompress(整个文件)
+        raw_data = sl_path.read_bytes()
+        try:
+            decompressed = lzma.decompress(raw_data)
+        except Exception:
+            # 回退: FORMAT_RAW LZMA1 (兼容测试数据和非标准格式)
+            try:
+                decomp = lzma.LZMADecompressor(
+                    format=lzma.FORMAT_RAW,
+                    filters=[{"id": lzma.FILTER_LZMA1, "dict_size": 67108864}],
+                )
+                decompressed = decomp.decompress(raw_data[13:])
+            except Exception as e:
+                manifest.add_error(f"LZMA 解压失败: {e}")
+                manifest.strategy = "decompress_failed"
+                return manifest
 
         # 写缓存
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

@@ -7,6 +7,7 @@ import pytest
 
 
 def make_sl_bytes(payload: bytes) -> bytes:
+    """生成与真实 .sl 文件兼容的测试数据 — 可用 lzma.decompress() 直接解压."""
     compressor = lzma.LZMACompressor(
         format=lzma.FORMAT_RAW,
         filters=[{"id": lzma.FILTER_LZMA1, "dict_size": 67108864}],

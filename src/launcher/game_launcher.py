@@ -33,23 +33,37 @@ def _find_luac(game_dir: Path) -> Optional[Path]:
 
 def _compile_map_o(game_dir: Path, luac_path: Path,
                    current_options: dict, selected_map: int) -> tuple:
-    """从当前选项动态编译 map.o."""
+    """从当前选项动态编译 map.o — 严格匹配原启动器字节码.
+
+    原版逻辑:
+      g_map_display = 1
+      g_map_opt = dict(DEFAULT_MAP_OPTIONS)
+      遍历 current_options，只覆盖 len(values)==11 的条目
+      luac -s -o map.o tmp.lua  (注意 -s 去除调试符号)
+    """
     try:
-        g_map_display = 0
+        g_map_display = 1  # 原版是 1，不是 0
+
+        # 从 DEFAULT_MAP_OPTIONS 开始
         g_map_opt = {}
         for offset, values in DEFAULT_MAP_OPTIONS.items():
-            if current_options and offset in current_options:
-                g_map_opt[offset] = list(current_options[offset])
-            else:
-                g_map_opt[offset] = list(values)
+            g_map_opt[offset] = list(values)
+
+        # current_options 中只有 len==11 的才覆盖
+        if current_options:
+            for offset, values in current_options.items():
+                if values and len(values) == 11:
+                    g_map_opt[offset] = list(values)
 
         lua_src = generate_map_opt_lua(g_map_display, g_map_opt)
-        tmp_path = game_dir / "map_tmp.lua"
-        tmp_path.write_text(lua_src, encoding="utf-8")
 
         map_o_path = game_dir / "map.o"
+        tmp_path = map_o_path.with_suffix(".lua.tmp")
+        tmp_path.write_text(lua_src, encoding="gbk")  # 原版用 gbk
+
+        # 原版: luac -s -o map.o tmp.lua  (有 -s 参数)
         result = subprocess.run(
-            [str(luac_path), "-o", str(map_o_path), str(tmp_path)],
+            [str(luac_path), "-s", "-o", str(map_o_path), str(tmp_path)],
             capture_output=True, text=True, timeout=10
         )
         tmp_path.unlink(missing_ok=True)
