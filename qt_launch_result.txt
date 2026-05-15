@@ -1,0 +1,5 @@
+PID=38316
+failure_kind=ui_init_failed
+errors=['UI 初始化失败 (tab_interface nil)', '游戏引擎报告地图读取失败']
+has_sanguo_o=False
+after_run=1
