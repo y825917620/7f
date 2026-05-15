@@ -59,36 +59,31 @@ def _write_config_lua(game_dir: Path, map_id: int, options: list) -> tuple:
 
 def _compile_edt2(game_dir: Path, luac_path: Path, map_id: int, options: list) -> tuple:
     lua_src = generate_edt2_lua(map_id, options, game_dir=game_dir)
-    for target in [game_dir / "core" / "edt2.o", game_dir / "edt2.o"]:
-        ok, err = _compile_lua(luac_path, target, lua_src)
-        if not ok:
-            return False, f"编译 {target.name} 失败:\n{err}"
+    # 只写 core/edt2.o，不写 data/edt2.o（与原启动器一致）
+    ok, err = _compile_lua(luac_path, game_dir / "core" / "edt2.o", lua_src)
+    if not ok:
+        return False, f"编译 edt2.o 失败:\n{err}"
     return True, ""
 
 
 def _compile_map_o(game_dir: Path, luac_path: Path,
                    current_options: dict, selected_map: int) -> tuple:
-    """编译 map.o — 只包含当前选中地图的选项（与原版 exe 产物一致）.
-
-    原版 map.o (202 bytes):
-      g_map_display = 0
-      g_map_opt = {offset: [11 values]}  # 只有 1 个条目
-    """
+    """编译 map.o — 包含所有地图的默认选项（与原版 exe 2539 字节产物一致）."""
     try:
-        g_map_display = 0  # 原版产物确认为 0
+        g_map_display = 0
 
-        # 只包含当前选中地图的选项
-        map_offset = selected_map - 10000
+        # 包含所有 DEFAULT_MAP_OPTIONS，确保游戏正确初始化本地单机模式
         g_map_opt = {}
-        if current_options and map_offset in current_options:
-            values = current_options[map_offset]
+        for opt_id, values in DEFAULT_MAP_OPTIONS.items():
             if len(values) == 11:
-                g_map_opt[map_offset] = list(values)
+                g_map_opt[opt_id] = list(values)
 
-        # 如果没找到选项，用默认值
-        if not g_map_opt:
-            default = DEFAULT_MAP_OPTIONS.get(map_offset, [-1]*10 + [0])
-            g_map_opt[map_offset] = list(default)
+        # 如果当前地图有额外选项，覆盖
+        map_offset = selected_map - 10000
+        if current_options and map_offset in current_options:
+            vals = current_options[map_offset]
+            if len(vals) == 11:
+                g_map_opt[map_offset] = list(vals)
 
         lua_src = generate_map_opt_lua(g_map_display, g_map_opt)
 
@@ -207,9 +202,9 @@ class GameBridge:
         return datetime.now().strftime("%Y%m%d_%H%M%S")
 
     def _build_cmdline(self, game_path: Path) -> str:
-        # 默认只交给游戏地图 ID。地图包已经由 ResourceMountManager 写入
-        # sl/map.map 与 core/sl/map.map；编辑器参数会触发网络/重连链路。
-        return f'"{game_path}" {self.map_id}'
+        # 原版 C++ 命令行: core\game.exe MemoryMapName=sanguo
+        # 游戏从 sanguo 内存映射读取 LuaRDGTM 地图包
+        return f'"{game_path}" {self.map_id} MemoryMapName=sanguo'
 
     def _create_live_map_mapping(self, kernel32) -> Optional[str]:
         map_file = self.manifest.mount_points[0] if self.manifest.mount_points else self.manifest.unpacked_path
@@ -224,12 +219,14 @@ class GameBridge:
         size = len(data)
         high = (size >> 32) & 0xFFFFFFFF
         low = size & 0xFFFFFFFF
+        kernel32.CreateFileMappingA.restype = wintypes.HANDLE
         h_map = kernel32.CreateFileMappingA(
             wintypes.HANDLE(-1), None, 0x04, high, low, b"sanguo"
         )
         if not h_map:
             return f"创建 MemoryMapName=sanguo 失败，错误码 {kernel32.GetLastError()}"
 
+        kernel32.MapViewOfFile.restype = ctypes.c_void_p
         ptr = kernel32.MapViewOfFile(h_map, 0xF001F, 0, 0, size)
         if not ptr:
             err = kernel32.GetLastError()
@@ -237,6 +234,7 @@ class GameBridge:
             return f"写入 MemoryMapName=sanguo 失败，错误码 {err}"
 
         ctypes.memmove(ptr, data, size)
+        kernel32.UnmapViewOfFile.argtypes = [ctypes.c_void_p]
         kernel32.UnmapViewOfFile(ptr)
         self._handles["live_map"] = h_map
         return None
@@ -286,12 +284,53 @@ class GameBridge:
         return len(self._prepare_errors) == 0
 
     def launch(self) -> tuple:
-        """创建游戏进程."""
+        """创建游戏进程 — 带启动信息 SHM + NUL 重定向（不含登录 SHM，避免重连 UI）."""
         kernel32 = ctypes.windll.kernel32
-
         kernel32.CreateMutexA.restype = wintypes.HANDLE
         self._handles["mutex"] = kernel32.CreateMutexA(None, False, b"7fxx_dgtm")
 
+        # 1. 启动信息共享内存 7fgame_game_client_start_info (512 bytes, offset0 = map_id)
+        kernel32.CreateFileMappingA.restype = wintypes.HANDLE
+        h_start_info = kernel32.CreateFileMappingA(
+            wintypes.HANDLE(-1), None, 0x04, 0, 512, b"7fgame_game_client_start_info"
+        )
+        if h_start_info:
+            kernel32.MapViewOfFile.restype = ctypes.c_void_p
+            ptr_si = kernel32.MapViewOfFile(h_start_info, 0xF001F, 0, 0, 512)
+            if ptr_si:
+                buf = (ctypes.c_uint32 * 1)(self.map_id)
+                ctypes.memmove(ptr_si, buf, ctypes.sizeof(buf))
+                kernel32.UnmapViewOfFile.argtypes = [ctypes.c_void_p]
+                kernel32.UnmapViewOfFile(ptr_si)
+            self._handles["start_info"] = h_start_info
+
+        # 2. 匿名管道 + NUL 重定向
+        class SECURITY_ATTRIBUTES(ctypes.Structure):
+            _fields_ = [("nLength", wintypes.DWORD), ("lpSecurityDescriptor", wintypes.LPVOID),
+                        ("bInheritHandle", wintypes.BOOL)]
+        sa = SECURITY_ATTRIBUTES()
+        sa.nLength = ctypes.sizeof(sa)
+        sa.lpSecurityDescriptor = None
+        sa.bInheritHandle = True
+
+        h_read = wintypes.HANDLE()
+        h_write = wintypes.HANDLE()
+        kernel32.CreatePipe.restype = wintypes.BOOL
+        if not kernel32.CreatePipe(ctypes.byref(h_read), ctypes.byref(h_write), ctypes.byref(sa), 0):
+            return False, f"CreatePipe 失败 (错误码: {kernel32.GetLastError()})"
+
+        h_nul = kernel32.CreateFileA(
+            b"NUL", 0x40000000, 0x3, None, 3, 0x80, None
+        )
+        if h_nul == wintypes.HANDLE(-1).value:
+            h_nul = None
+
+        # 3. 内存映射 sanguo（地图数据）
+        map_err = self._create_live_map_mapping(kernel32)
+        if map_err:
+            return False, f"创建内存映射失败:\n{map_err}"
+
+        # 4. 设置 STARTUPINFO
         class STARTUPINFOA(ctypes.Structure):
             _fields_ = [
                 ("cb", wintypes.DWORD), ("lpReserved", wintypes.LPSTR),
@@ -311,8 +350,11 @@ class GameBridge:
 
         si = STARTUPINFOA()
         si.cb = ctypes.sizeof(si)
-        si.dwFlags = 0x1
+        si.dwFlags = 0x101  # STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW
         si.wShowWindow = 1
+        si.hStdInput = h_read
+        si.hStdOutput = wintypes.HANDLE(h_nul) if h_nul else None
+        si.hStdError = wintypes.HANDLE(h_nul) if h_nul else None
 
         game_path = self.game_dir / "core" / "game.exe"
         if not game_path.exists():
@@ -323,7 +365,7 @@ class GameBridge:
         pi = PROCESS_INFORMATION()
         ok = kernel32.CreateProcessA(
             str(game_path).encode("mbcs"), cmdline.encode("mbcs"),
-            None, None, False, 0, None,
+            None, None, True, 0, None,  # bInheritHandles = True
             str(self.game_dir).encode("mbcs"),
             ctypes.byref(si), ctypes.byref(pi)
         )
@@ -331,6 +373,17 @@ class GameBridge:
         if not ok:
             err = kernel32.GetLastError()
             return False, f"CreateProcessA 失败 (错误码: {err})"
+
+        # 5. 写管道 16 字节 [PID, TID, map_id, 0]
+        pipe_data = (ctypes.c_uint32 * 4)(pi.dwProcessId, pi.dwThreadId, self.map_id, 0)
+        written = wintypes.DWORD(0)
+        kernel32.WriteFile(h_write, pipe_data, ctypes.sizeof(pipe_data), ctypes.byref(written), None)
+
+        # 关闭子进程端的管道句柄 + NUL
+        kernel32.CloseHandle(h_read)
+        kernel32.CloseHandle(h_write)
+        if h_nul:
+            kernel32.CloseHandle(wintypes.HANDLE(h_nul))
 
         self._process_info = {"pid": pi.dwProcessId, "tid": pi.dwThreadId, "hProcess": pi.hProcess}
         kernel32.CloseHandle(pi.hThread)

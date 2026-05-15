@@ -51,6 +51,9 @@ def update_game_setting(game_dir, resolution_index):
         while len(lines) < 21:
             lines.append("0")
 
+        # 确保第1行始终为 1（窗口模式标志）
+        lines[0] = "1"
+
         # 应用分辨率：RESOLUTION_OPTIONS = [(name, display_quality, screen_full), ...]
         if 0 <= resolution_index < len(RESOLUTION_OPTIONS):
             _, display_quality, screen_full = RESOLUTION_OPTIONS[resolution_index]

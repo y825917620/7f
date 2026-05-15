@@ -51,7 +51,10 @@ def generate_edt2_lua(map_id, options, control_id=1, display=0, game_dir=None):
       tempConfigLuaMapOptionInfo(10个{idx,val})
       SetCurrentControlID GetMapOptionInfo helper_get006 GetMapOptionDisplay
     """
-    helper004, helper005 = ORIGINAL_HELPER_004, ORIGINAL_HELPER_005
+    if game_dir:
+        helper004, helper005 = _read_helper_from_setting(game_dir)
+    else:
+        helper004, helper005 = ORIGINAL_HELPER_004, ORIGINAL_HELPER_005
 
     option_parts = []
     for i in range(10):
