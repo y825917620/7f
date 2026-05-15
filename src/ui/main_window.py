@@ -2,6 +2,7 @@
 """启动器主窗口"""
 
 import sys
+import time
 import webbrowser
 from pathlib import Path
 
@@ -25,8 +26,12 @@ from .sponsor_widgets import (
     SPONSOR_URLS, QQ_GROUP, VIP_PRODUCTS,
     VersionCheckThread, SponsorSettingsDialog,
 )
-from ..launcher.game_launcher import launch_game
+from ..core.map_catalog import MapCatalog
+from ..core.resource_mount_manager import ResourceMountManager
+from ..core.resource_workspace import ResourceWorkspace
+from ..launcher.game_launcher import GameBridge, launch_game
 from ..launcher.game_settings import update_game_setting
+from ..launcher.log_verifier import LogVerifier
 
 
 class LauncherWindow(QMainWindow):
@@ -574,15 +579,96 @@ class LauncherWindow(QMainWindow):
         QMessageBox.information(self, "config.lua 预览", f"<pre>{lua}</pre>")
 
     def _launch_game(self):
-        success = launch_game(
-            self, self.selected_map, self.game_dir,
-            self.current_options, self.resolution_combo.currentIndex(),
-            self.vip_checkboxes, self.vip_type_combos, self.sponsor_account,
-            self.vip_settings
+        """启动游戏 — 通过 manifest 驱动完整链路."""
+        if self.selected_map is None:
+            QMessageBox.warning(self, "提示", "请先选择一张地图")
+            return
+
+        map_id = int(self.selected_map)
+        abs_game_dir = Path(self.game_dir).absolute()
+
+        # 1. 检查地图资源完整性
+        catalog = MapCatalog(abs_game_dir)
+        info = catalog.get_info(map_id)
+        if info is None:
+            QMessageBox.critical(self, "启动错误",
+                f"未找到地图 {map_id} 的资源文件\n\n"
+                f"请确认以下文件存在:\n"
+                f"  {abs_game_dir / 'map' / f'{map_id}.map'}\n"
+                f"  {abs_game_dir / 'map' / f'{map_id}.sl'}")
+            return
+
+        diag = catalog.diagnose(map_id)
+        if diag:
+            QMessageBox.critical(self, "启动错误", diag)
+            return
+
+        # 2. 资源准备（解包 + 挂载）
+        mount_mgr = ResourceMountManager(abs_game_dir)
+        manifest = mount_mgr.prepare(map_id, info["sl_path"])
+        if not manifest.is_valid():
+            err_msg = "\n".join(manifest.errors) if manifest.errors else "地图资源准备失败"
+            QMessageBox.critical(self, "启动错误", err_msg)
+            return
+
+        # 3. 保存 manifest 用于诊断
+        manifest_dir = abs_game_dir.parent / "launcher_logs"
+        manifest_dir.mkdir(parents=True, exist_ok=True)
+        manifest_path = manifest_dir / f"manifest_{map_id}_{int(time.time())}.json"
+        manifest.save(manifest_path)
+
+        # 4. 启动游戏
+        bridge = launch_game(manifest)
+        if bridge is None:
+            QMessageBox.critical(self, "启动错误", "CreateProcess 失败，请检查游戏文件完整性")
+            return
+
+        # 5. 保存启动上下文
+        self._last_launch_manifest = manifest
+        self._last_launch_pid = bridge.process_id
+        self._game_process_handle = bridge.process_handle
+
+        info = MAP_INFO.get(self.selected_map, {})
+        self.statusbar.showMessage(
+            f"游戏已启动: {info.get('name', '地图')} ({self.selected_map}) | "
+            f"PID={bridge.process_id} | manifest: {manifest_path.name}"
         )
-        if success:
-            info = MAP_INFO.get(self.selected_map, {})
-            self.statusbar.showMessage(f"游戏已启动: {info.get('name', '地图')} ({self.selected_map})")
+
+    def verify_launch(self):
+        """手动触发启动验证."""
+        manifest = getattr(self, "_last_launch_manifest", None)
+        if manifest is None:
+            QMessageBox.information(self, "验证", "没有可验证的启动记录")
+            return
+
+        verifier = LogVerifier(self.game_dir)
+        log_dir = verifier.find_latest_log_dir()
+
+        if log_dir is None:
+            QMessageBox.warning(self, "验证结果", "未找到游戏日志目录，游戏可能尚未初始化")
+            return
+
+        result = verifier.verify(manifest.map_id, log_dir)
+
+        if result["ok"]:
+            msg = (
+                f"✅ 地图加载成功!\n\n"
+                f"地图 ID: {manifest.map_id}\n"
+                f"日志目录: {log_dir.name}\n"
+                f"Render 计数: {result['render_count']}\n"
+                f"AfterRun 计数: {result['after_run_count']}"
+            )
+        else:
+            err_lines = "\n".join(f"  - {e}" for e in result["errors"])
+            msg = (
+                f"❌ 地图加载未完成\n\n"
+                f"地图 ID: {manifest.map_id}\n"
+                f"日志目录: {log_dir.name}\n"
+                f"错误:\n{err_lines}\n\n"
+                f"请查看完整日志: {log_dir / 'init.log'}"
+            )
+
+        QMessageBox.information(self, "启动验证结果", msg)
 
     def _check_version(self):
         self.statusbar.showMessage("正在检查版本更新...")

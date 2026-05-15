@@ -125,7 +125,6 @@ class MapPackageAnalyzer:
         report = cls.analyze(sl_path)
         if not report["ok"]:
             return None
-        # 重新解压（analyze 已验证，这里直接返回）
         data = sl_path.read_bytes()
         compressed = data[13:]
         decompressor = lzma.LZMADecompressor(
@@ -133,3 +132,31 @@ class MapPackageAnalyzer:
             filters=[{"id": lzma.FILTER_LZMA1, "dict_size": 67108864}],
         )
         return decompressor.decompress(compressed)
+
+    @classmethod
+    def batch_analyze(cls, map_ids: list, map_dir: Path) -> dict:
+        """批量分析多张地图，返回汇总报告.
+
+        Returns:
+            {
+                "total": int,
+                "ok": int,
+                "failed": int,
+                "missing_sl": int,
+                "results": {map_id: report},
+            }
+        """
+        summary = {"total": len(map_ids), "ok": 0, "failed": 0, "missing_sl": 0, "results": {}}
+        for mid in map_ids:
+            sl_path = map_dir / f"{mid}.sl"
+            if not sl_path.exists():
+                summary["missing_sl"] += 1
+                summary["results"][mid] = {"ok": False, "error": ".sl 文件不存在"}
+                continue
+            report = cls.analyze(sl_path)
+            summary["results"][mid] = report
+            if report["ok"]:
+                summary["ok"] += 1
+            else:
+                summary["failed"] += 1
+        return summary

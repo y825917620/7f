@@ -31,9 +31,14 @@ args = [
     # Hidden imports
     "--hidden-import", "src.core.config_generator",
     "--hidden-import", "src.core.map_parser",
-    "--hidden-import", "src.core.sl_handler",
+    "--hidden-import", "src.core.map_catalog",
+    "--hidden-import", "src.core.map_launch_manifest",
+    "--hidden-import", "src.core.map_package_analyzer",
+    "--hidden-import", "src.core.resource_mount_manager",
+    "--hidden-import", "src.core.resource_workspace",
     "--hidden-import", "src.launcher.game_launcher",
     "--hidden-import", "src.launcher.game_settings",
+    "--hidden-import", "src.launcher.log_verifier",
     "--hidden-import", "src.ui.main_window",
     "--hidden-import", "src.ui.sponsor_widgets",
     # PyQt6 hidden imports
