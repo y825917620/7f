@@ -202,9 +202,9 @@ class GameBridge:
         return datetime.now().strftime("%Y%m%d_%H%M%S")
 
     def _build_cmdline(self, game_path: Path) -> str:
-        # 原版 C++ 命令行: core\game.exe MemoryMapName=sanguo
-        # 游戏从 sanguo 内存映射读取 LuaRDGTM 地图包
-        return f'"{game_path}" {self.map_id} MemoryMapName=sanguo'
+        # 原版 C++ 默认命令行，不加编辑器/直播参数
+        # 地图资源由 .sl 文件加载，sanguo SHM 仅用于服务器会话
+        return f'"{game_path}" {self.map_id}'
 
     def _create_live_map_mapping(self, kernel32) -> Optional[str]:
         map_file = self.manifest.mount_points[0] if self.manifest.mount_points else self.manifest.unpacked_path
@@ -325,10 +325,8 @@ class GameBridge:
         if h_nul == wintypes.HANDLE(-1).value:
             h_nul = None
 
-        # 3. 内存映射 sanguo（地图数据）
-        map_err = self._create_live_map_mapping(kernel32)
-        if map_err:
-            return False, f"创建内存映射失败:\n{map_err}"
+        # 3. sanguo 内存映射仅用于服务器多人会话，本地单机不需要
+        # self._create_live_map_mapping(kernel32)
 
         # 4. 设置 STARTUPINFO
         class STARTUPINFOA(ctypes.Structure):
