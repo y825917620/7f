@@ -36,6 +36,7 @@ args = [
     "--hidden-import", "src.core.map_package_analyzer",
     "--hidden-import", "src.core.resource_mount_manager",
     "--hidden-import", "src.core.resource_workspace",
+    "--hidden-import", "src.core.resource_control_service",
     "--hidden-import", "src.launcher.game_launcher",
     "--hidden-import", "src.launcher.game_settings",
     "--hidden-import", "src.launcher.log_verifier",

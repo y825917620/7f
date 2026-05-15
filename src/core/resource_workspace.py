@@ -189,8 +189,8 @@ class ResourceWorkspace:
                 try:
                     stat = entry.stat()
                     index["files"][rel] = {
-                        "size": stat.st_mtime,
                         "bytes": stat.st_size,
+                        "mtime": stat.st_mtime,
                     }
                 except Exception:
                     pass

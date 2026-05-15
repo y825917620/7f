@@ -65,9 +65,12 @@ class MapCatalog:
             return f"地图 {map_id} 缺少 .map 元数据文件"
         if not rec["has_sl"]:
             return f"地图 {map_id} 缺少 .sl 运行包"
-        # 体积异常检查（小于 1KB 视为异常）
-        if rec.get("sl_size", 0) < 1024:
-            return f"地图 {map_id} .sl 体积异常 ({rec['sl_size']} bytes)"
+        # 格式验证（使用 MapPackageAnalyzer 检查 .sl 是否可解压）
+        if rec.get("sl_path"):
+            from .map_package_analyzer import MapPackageAnalyzer
+            report = MapPackageAnalyzer.analyze(rec["sl_path"])
+            if not report["ok"]:
+                return report.get("error") or f"地图 {map_id} .sl 格式验证失败"
         return None
 
     def all_diagnoses(self) -> Dict[int, str]:
