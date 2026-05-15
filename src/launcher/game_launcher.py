@@ -293,28 +293,7 @@ class GameBridge:
                 kernel32.UnmapViewOfFile(ptr_si)
             self._handles["start_info"] = h_start_info
 
-        # 2. 匿名管道 + NUL 重定向
-        class SECURITY_ATTRIBUTES(ctypes.Structure):
-            _fields_ = [("nLength", wintypes.DWORD), ("lpSecurityDescriptor", wintypes.LPVOID),
-                        ("bInheritHandle", wintypes.BOOL)]
-        sa = SECURITY_ATTRIBUTES()
-        sa.nLength = ctypes.sizeof(sa)
-        sa.lpSecurityDescriptor = None
-        sa.bInheritHandle = True
-
-        h_read = wintypes.HANDLE()
-        h_write = wintypes.HANDLE()
-        kernel32.CreatePipe.restype = wintypes.BOOL
-        if not kernel32.CreatePipe(ctypes.byref(h_read), ctypes.byref(h_write), ctypes.byref(sa), 0):
-            return False, f"CreatePipe 失败 (错误码: {kernel32.GetLastError()})"
-
-        h_nul = kernel32.CreateFileA(
-            b"NUL", 0x40000000, 0x3, None, 3, 0x80, None
-        )
-        if h_nul == wintypes.HANDLE(-1).value:
-            h_nul = None
-
-        # 3. 设置 STARTUPINFO
+        # 2. 设置 STARTUPINFO — 匹配原版 C++ CreateProcessA
         class STARTUPINFOA(ctypes.Structure):
             _fields_ = [
                 ("cb", wintypes.DWORD), ("lpReserved", wintypes.LPSTR),
@@ -334,11 +313,9 @@ class GameBridge:
 
         si = STARTUPINFOA()
         si.cb = ctypes.sizeof(si)
-        si.dwFlags = 0x101  # STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW
+        # 匹配原版 C++: 无管道, 无 NUL, bInheritHandles=FALSE, dwFlags=0
+        si.dwFlags = 0
         si.wShowWindow = 1
-        si.hStdInput = h_read
-        si.hStdOutput = wintypes.HANDLE(h_nul) if h_nul else None
-        si.hStdError = wintypes.HANDLE(h_nul) if h_nul else None
 
         game_path = self.game_dir / "core" / "game.exe"
         if not game_path.exists():
@@ -349,7 +326,7 @@ class GameBridge:
         pi = PROCESS_INFORMATION()
         ok = kernel32.CreateProcessA(
             str(game_path).encode("mbcs"), cmdline.encode("mbcs"),
-            None, None, True, 0, None,  # bInheritHandles = True
+            None, None, False, 0, None,  # bInheritHandles=FALSE (匹配原版)
             str(self.game_dir).encode("mbcs"),
             ctypes.byref(si), ctypes.byref(pi)
         )
@@ -357,17 +334,6 @@ class GameBridge:
         if not ok:
             err = kernel32.GetLastError()
             return False, f"CreateProcessA 失败 (错误码: {err})"
-
-        # 5. 写管道 16 字节 [PID, TID, map_id, 0]
-        pipe_data = (ctypes.c_uint32 * 4)(pi.dwProcessId, pi.dwThreadId, self.map_id, 0)
-        written = wintypes.DWORD(0)
-        kernel32.WriteFile(h_write, pipe_data, ctypes.sizeof(pipe_data), ctypes.byref(written), None)
-
-        # 关闭子进程端的管道句柄 + NUL
-        kernel32.CloseHandle(h_read)
-        kernel32.CloseHandle(h_write)
-        if h_nul:
-            kernel32.CloseHandle(wintypes.HANDLE(h_nul))
 
         self._process_info = {"pid": pi.dwProcessId, "tid": pi.dwThreadId, "hProcess": pi.hProcess}
         kernel32.CloseHandle(pi.hThread)
