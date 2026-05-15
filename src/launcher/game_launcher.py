@@ -250,48 +250,8 @@ class GameBridge:
         return None
 
     def prepare(self) -> bool:
-        """准备 map.o + 分辨率设置 — 与原版 exe 行为一致."""
-        game_dir = self.game_dir
-
-        for mount_point in self.manifest.mount_points:
-            if not Path(mount_point).exists():
-                self._prepare_errors.append(f"地图挂载文件不存在: {mount_point}")
-
-        if self._prepare_errors:
-            return False
-
-        # 1. 编译 map.o — 只含当前选中地图的选项
-        ok, err = _write_config_lua(game_dir, self.map_id, self.options)
-        if not ok:
-            self._prepare_errors.append(err)
-
-        luac_path = _find_luac(game_dir)
-        if luac_path:
-            map_offset = self.map_id - 10000
-            current_options = {map_offset: self.options}
-            ok, err = _compile_map_o(game_dir, luac_path, current_options, self.map_id)
-            if not ok:
-                self._prepare_errors.append(f"编译 map.o 失败:\n{err}")
-            ok, err = _compile_edt2(game_dir, luac_path, self.map_id, self.options)
-            if not ok:
-                self._prepare_errors.append(err)
-        else:
-            self._prepare_errors.append("未找到 luac5.1.exe，无法编译 edt2.o/map.o")
-
-        # 2. 分辨率/窗口模式设置
-        try:
-            from .game_settings import update_game_setting
-            update_game_setting(game_dir, self.resolution_index)
-        except Exception as e:
-            self._prepare_errors.append(f"分辨率设置失败: {e}")
-
-        try:
-            manifest_path = game_dir / "launcher_logs" / f"launch_{self.map_id}_{self._process_safe_timestamp()}.json"
-            self.manifest.save(manifest_path)
-        except Exception as e:
-            self._prepare_errors.append(f"保存启动清单失败: {e}")
-
-        return len(self._prepare_errors) == 0
+        """不写任何文件 — 使用已有 edt2.o/map.o/GameSetting.inf."""
+        return True
 
     def launch(self) -> tuple:
         """创建游戏进程 — 带启动信息 SHM + NUL 重定向（不含登录 SHM，避免重连 UI）."""
