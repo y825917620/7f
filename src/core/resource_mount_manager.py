@@ -1,32 +1,57 @@
 # -*- coding: utf-8 -*-
-"""ResourceMountManager — 从 .sl 解包并双挂载到 sl/map.map + core/sl/map.map."""
+"""ResourceMountManager — 拆包 .sl → map/{id}/{id}.map + map/{id}/{id}.o (Blowfish解密)."""
 
 import lzma
-from datetime import datetime
+import struct
 from pathlib import Path
 from typing import Optional
 
-from .map_package_analyzer import MapPackageAnalyzer
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
 from .map_launch_manifest import MapLaunchManifest
 from .map_catalog import MapCatalog
 
+# gpigame.dll DecryptMap 使用的密钥
+_BLOWFISH_KEY = b"DEFAULT_KEY" + b"\x00"
 
-def _atomic_write(path: Path, data: bytes) -> None:
-    """原子写入：先写临时文件再替换."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_bytes(data)
-    tmp.replace(path)
+
+def _extract_sl(sl_path: Path, game_dir: Path, map_id: int) -> tuple:
+    """拆包 .sl: 返回 (map_data, decrypted_payload, 错误信息).
+
+    Steps:
+    1. LZMA_ALONE 解压 .sl
+    2. 解析 LuaRDGTM 头
+    3. 提取内嵌 .map
+    4. Blowfish/ECB 解密 payload → Lua 5.1 bytecode
+    """
+    try:
+        raw = sl_path.read_bytes()
+        dec = lzma.decompress(raw, format=lzma.FORMAT_ALONE)
+
+        if dec[:8] != b"LuaRDGTM":
+            return None, None, "不是 LuaRDGTM 容器"
+
+        map_size = struct.unpack_from("<I", dec, 0x08)[0]
+        payload_size = struct.unpack_from("<I", dec, 0x0C)[0]
+        map_off = 0x10
+        payload_off = map_off + map_size
+
+        map_data = dec[map_off:payload_off]
+        payload_enc = dec[payload_off:payload_off + payload_size]
+
+        # Blowfish/ECB 解密
+        n = len(payload_enc) & ~7
+        cipher = Cipher(algorithms.Blowfish(_BLOWFISH_KEY), modes.ECB())
+        decryptor = cipher.decryptor()
+        payload_dec = decryptor.update(payload_enc[:n]) + decryptor.finalize()
+
+        return map_data, payload_dec, None
+    except Exception as e:
+        return None, None, f"拆包 .sl 失败: {e}"
 
 
 class ResourceMountManager:
-    """管理 sl/map.map 虚拟文件系统的创建和验证."""
-
-    # 挂载点 — 同时写根目录和 core 目录，让运行时读取路径可验证。
-    MOUNT_POINTS = [
-        Path("sl") / "map.map",
-        Path("core") / "sl" / "map.map",
-    ]
+    """拆包 .sl → map/{id}/{id}.map + map/{id}/{id}.o."""
 
     def __init__(self, game_dir: Path, cache_dir: Optional[Path] = None):
         self.game_dir = Path(game_dir)
@@ -34,79 +59,38 @@ class ResourceMountManager:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def prepare(self, map_id: int, sl_path: Path) -> MapLaunchManifest:
-        """解压 .sl 并双挂载到 sl/map.map 和 core/sl/map.map.
+        """拆包 .sl 并写入 map/{id}/{id}.map 和 map/{id}/{id}.o."""
+        manifest = MapLaunchManifest(map_id=map_id, game_dir=self.game_dir, sl_path=sl_path)
 
-        Steps:
-        1. 分析 .sl 格式
-        2. 解压到缓存目录
-        3. 双挂载到两个运行态路径
-        4. 生成 manifest
-        """
-        manifest = MapLaunchManifest(
-            map_id=map_id,
-            game_dir=self.game_dir,
-            sl_path=sl_path,
-        )
-
-        sl_path = Path(sl_path)
-        if not sl_path.exists():
+        if not Path(sl_path).exists():
             manifest.add_error(f".sl 文件不存在: {sl_path}")
             manifest.strategy = "missing_sl"
             return manifest
 
-        report = MapPackageAnalyzer.analyze(sl_path)
-        if not report["ok"]:
-            manifest.add_error(report.get("error") or ".sl 格式验证未通过")
-            manifest.strategy = "invalid_sl"
+        map_data, lua_payload, err = _extract_sl(Path(sl_path), self.game_dir, map_id)
+        if err:
+            manifest.add_error(err)
+            manifest.strategy = "extract_failed"
             return manifest
 
-        # 解压 — 优先用原版方式 lzma.decompress(整个文件)
-        raw_data = sl_path.read_bytes()
-        try:
-            decompressed = lzma.decompress(raw_data)
-        except Exception:
-            # 回退: FORMAT_RAW LZMA1 (兼容测试数据和非标准格式)
-            try:
-                decomp = lzma.LZMADecompressor(
-                    format=lzma.FORMAT_RAW,
-                    filters=[{"id": lzma.FILTER_LZMA1, "dict_size": 67108864}],
-                )
-                decompressed = decomp.decompress(raw_data[13:])
-            except Exception as e:
-                manifest.add_error(f"LZMA 解压失败: {e}")
-                manifest.strategy = "decompress_failed"
-                return manifest
+        # 写入 map/{id}/{id}.map 和 map/{id}/{id}.o
+        map_dir = self.game_dir / "map" / str(map_id)
+        map_dir.mkdir(parents=True, exist_ok=True)
 
-        # 写缓存
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        session_dir = self.cache_dir / f"{map_id}_{timestamp}"
-        session_dir.mkdir(parents=True, exist_ok=True)
-        cache_file = session_dir / "map_package.bin"
-        cache_file.write_bytes(decompressed)
+        map_path = map_dir / f"{map_id}.map"
+        o_path = map_dir / f"{map_id}.o"
+        map_path.write_bytes(map_data)
+        o_path.write_bytes(lua_payload)
 
-        manifest.set_hashes(
-            sl_sha256=report.get("sl_sha256"),
-            unpacked_sha256=report.get("dec_sha256"),
-        )
-
-        # 双挂载
-        mounted = []
-        for rel_path in self.MOUNT_POINTS:
-            target = self.game_dir / rel_path
-            _atomic_write(target, decompressed)
-            mounted.append(target)
-
-        manifest.unpacked_path = cache_file
-        manifest.mount_points = mounted
-        manifest.strategy = "file_dual_mount"
+        manifest.unpacked_path = o_path
+        manifest.mount_points = [map_path, o_path]
+        manifest.strategy = "sl_extract_decrypt"
         return manifest
 
     def dry_run(self, map_id: int, sl_path: Path) -> dict:
-        """校验报告，不做文件操作."""
         catalog = MapCatalog(self.game_dir)
         return {
             "map_id": map_id,
             "catalog_diag": catalog.diagnose(map_id),
-            "sl_analysis": MapPackageAnalyzer.analyze(sl_path),
-            "ready": catalog.diagnose(map_id) is None and MapPackageAnalyzer.analyze(sl_path)["ok"],
+            "ready": catalog.diagnose(map_id) is None and Path(sl_path).exists(),
         }

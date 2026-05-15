@@ -1,0 +1,1076 @@
+====================================================================================================
+proto=1 path=0.0 depth=1 const=42 value=vip_hire_begintime
+line_defined=0 last_line=0 code=223480 consts=3159 children=0
+PC references: [(57, ['B/RK']), (306, ['B/RK']), (553, ['B/RK']), (874, ['B/RK']), (1279, ['B/RK']), (1684, ['B/RK']), (2096, ['B/RK']), (2155, ['C/RK']), (2518, ['B/RK']), (2939, ['B/RK']), (3357, ['B/RK']), (3562, ['C/RK']), (3780, ['B/RK']), (4197, ['B/RK']), (4611, ['B/RK']), (5031, ['B/RK']), (5441, ['B/RK']), (5854, ['B/RK']), (6268, ['B/RK']), (6682, ['B/RK']), (7099, ['B/RK']), (7454, ['C/RK']), (7516, ['B/RK']), (7927, ['B/RK']), (8335, ['B/RK']), (8747, ['B/RK']), (9157, ['B/RK']), (9561, ['B/RK']), (9753, ['C/RK']), (9971, ['B/RK']), (10386, ['B/RK']), (10796, ['B/RK']), (11001, ['C/RK']), (11219, ['B/RK']), (11635, ['B/RK']), (12045, ['B/RK']), (12110, ['C/RK']), (12464, ['B/RK']), (12879, ['B/RK']), (13283, ['B/RK']), (13687, ['B/RK']), (14091, ['B/RK']), (14495, ['B/RK']), (14899, ['B/RK']), (15303, ['B/RK']), (15707, ['B/RK']), (16111, ['B/RK']), (16515, ['B/RK']), (16919, ['B/RK']), (17323, ['B/RK'])]
+
+-- around PC 57
+  0000049: NEWTABLE   A=3   B=1   C=0   Bx=512    sBx=-130559
+  0000050: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0000051: SETLIST    A=3   B=1   C=1   Bx=513    sBx=-130558
+  0000052: SETTABLE   A=2   B=291 C=3   Bx=148995 sBx=17924   ; B=K35:"FunctionList"
+  0000053: SETTABLE   A=2   B=292 C=260 Bx=149764 sBx=18693   ; B=K36:"hire_pannel", C=K4:1.0
+  0000054: SETTABLE   A=2   B=293 C=294 Bx=150310 sBx=19239   ; B=K37:"hire_cooldown", C=K38:19999999.0
+  0000055: SETTABLE   A=2   B=295 C=260 Bx=151300 sBx=20229   ; B=K39:"cha_AI_Call", C=K4:1.0
+  0000056: SETTABLE   A=2   B=296 C=297 Bx=151849 sBx=20778   ; B=K40:"hire_begintime", C=K41:10000.0
+>>0000057: SETTABLE   A=2   B=298 C=297 Bx=152873 sBx=21802   ; B=K42:"vip_hire_begintime", C=K41:10000.0
+  0000058: SETTABLE   A=2   B=299 C=267 Bx=153355 sBx=22284   ; B=K43:"role_level", C=K11:5.0
+  0000059: SETTABLE   A=2   B=300 C=270 Bx=153870 sBx=22799   ; B=K44:"cha_viewarea_day", C=K14:8.0
+  0000060: SETTABLE   A=2   B=301 C=302 Bx=154414 sBx=23343   ; B=K45:"min_mspd", C=K46:-1.0
+  0000061: SETTABLE   A=2   B=303 C=260 Bx=155396 sBx=24325   ; B=K47:"cha_type", C=K4:1.0
+  0000062: SETTABLE   A=2   B=304 C=276 Bx=155924 sBx=24853   ; B=K48:"Lumber_need", C=K20:0.0
+  0000063: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000064: SETTABLE   A=2   B=305 C=3   Bx=156163 sBx=25092   ; B=K49:"hire_unit"
+  0000065: SETTABLE   A=2   B=306 C=264 Bx=156936 sBx=25865   ; B=K50:"cha_AI_Response", C=K8:2.0
+  0000066: SETTABLE   A=2   B=307 C=276 Bx=157460 sBx=26389   ; B=K51:"if_GF_Unit", C=K20:0.0
+  0000067: SETTABLE   A=2   B=308 C=276 Bx=157972 sBx=26901   ; B=K52:"Uptime_cost", C=K20:0.0
+  0000068: SETTABLE   A=2   B=309 C=268 Bx=158476 sBx=27405   ; B=K53:"cha_viewarea_night", C=K12:6.0
+
+-- around PC 306
+  0000298: NEWTABLE   A=3   B=1   C=0   Bx=512    sBx=-130559
+  0000299: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0000300: SETLIST    A=3   B=1   C=1   Bx=513    sBx=-130558
+  0000301: SETTABLE   A=2   B=291 C=3   Bx=148995 sBx=17924   ; B=K35:"FunctionList"
+  0000302: SETTABLE   A=2   B=292 C=260 Bx=149764 sBx=18693   ; B=K36:"hire_pannel", C=K4:1.0
+  0000303: SETTABLE   A=2   B=293 C=276 Bx=150292 sBx=19221   ; B=K37:"hire_cooldown", C=K20:0.0
+  0000304: SETTABLE   A=2   B=295 C=260 Bx=151300 sBx=20229   ; B=K39:"cha_AI_Call", C=K4:1.0
+  0000305: SETTABLE   A=2   B=296 C=276 Bx=151828 sBx=20757   ; B=K40:"hire_begintime", C=K20:0.0
+>>0000306: SETTABLE   A=2   B=298 C=297 Bx=152873 sBx=21802   ; B=K42:"vip_hire_begintime", C=K41:10000.0
+  0000307: SETTABLE   A=2   B=299 C=276 Bx=153364 sBx=22293   ; B=K43:"role_level", C=K20:0.0
+  0000308: SETTABLE   A=2   B=300 C=270 Bx=153870 sBx=22799   ; B=K44:"cha_viewarea_day", C=K14:8.0
+  0000309: SETTABLE   A=2   B=301 C=302 Bx=154414 sBx=23343   ; B=K45:"min_mspd", C=K46:-1.0
+  0000310: SETTABLE   A=2   B=303 C=347 Bx=155483 sBx=24412   ; B=K47:"cha_type", C=K91:3.0
+  0000311: SETTABLE   A=2   B=304 C=491 Bx=156139 sBx=25068   ; B=K48:"Lumber_need", C=K235:99999999.0
+  0000312: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000313: SETTABLE   A=2   B=305 C=3   Bx=156163 sBx=25092   ; B=K49:"hire_unit"
+  0000314: SETTABLE   A=2   B=306 C=264 Bx=156936 sBx=25865   ; B=K50:"cha_AI_Response", C=K8:2.0
+  0000315: SETTABLE   A=2   B=307 C=276 Bx=157460 sBx=26389   ; B=K51:"if_GF_Unit", C=K20:0.0
+  0000316: SETTABLE   A=2   B=308 C=276 Bx=157972 sBx=26901   ; B=K52:"Uptime_cost", C=K20:0.0
+  0000317: SETTABLE   A=2   B=309 C=268 Bx=158476 sBx=27405   ; B=K53:"cha_viewarea_night", C=K12:6.0
+
+-- around PC 553
+  0000545: NEWTABLE   A=3   B=1   C=0   Bx=512    sBx=-130559
+  0000546: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0000547: SETLIST    A=3   B=1   C=1   Bx=513    sBx=-130558
+  0000548: SETTABLE   A=2   B=291 C=3   Bx=148995 sBx=17924   ; B=K35:"FunctionList"
+  0000549: SETTABLE   A=2   B=292 C=260 Bx=149764 sBx=18693   ; B=K36:"hire_pannel", C=K4:1.0
+  0000550: SETTABLE   A=2   B=293 C=276 Bx=150292 sBx=19221   ; B=K37:"hire_cooldown", C=K20:0.0
+  0000551: SETTABLE   A=2   B=295 C=260 Bx=151300 sBx=20229   ; B=K39:"cha_AI_Call", C=K4:1.0
+  0000552: SETTABLE   A=2   B=296 C=276 Bx=151828 sBx=20757   ; B=K40:"hire_begintime", C=K20:0.0
+>>0000553: SETTABLE   A=2   B=298 C=297 Bx=152873 sBx=21802   ; B=K42:"vip_hire_begintime", C=K41:10000.0
+  0000554: SETTABLE   A=2   B=299 C=267 Bx=153355 sBx=22284   ; B=K43:"role_level", C=K11:5.0
+  0000555: SETTABLE   A=2   B=300 C=270 Bx=153870 sBx=22799   ; B=K44:"cha_viewarea_day", C=K14:8.0
+  0000556: SETTABLE   A=2   B=301 C=302 Bx=154414 sBx=23343   ; B=K45:"min_mspd", C=K46:-1.0
+  0000557: SETTABLE   A=2   B=303 C=347 Bx=155483 sBx=24412   ; B=K47:"cha_type", C=K91:3.0
+  0000558: SETTABLE   A=2   B=304 C=491 Bx=156139 sBx=25068   ; B=K48:"Lumber_need", C=K235:99999999.0
+  0000559: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000560: SETTABLE   A=2   B=305 C=3   Bx=156163 sBx=25092   ; B=K49:"hire_unit"
+  0000561: SETTABLE   A=2   B=306 C=264 Bx=156936 sBx=25865   ; B=K50:"cha_AI_Response", C=K8:2.0
+  0000562: SETTABLE   A=2   B=307 C=276 Bx=157460 sBx=26389   ; B=K51:"if_GF_Unit", C=K20:0.0
+  0000563: SETTABLE   A=2   B=308 C=276 Bx=157972 sBx=26901   ; B=K52:"Uptime_cost", C=K20:0.0
+  0000564: SETTABLE   A=2   B=309 C=268 Bx=158476 sBx=27405   ; B=K53:"cha_viewarea_night", C=K12:6.0
+
+-- around PC 874
+  0000866: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0000867: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0000868: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0000869: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0000870: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+  0000871: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0000872: SETTABLE   A=3   B=296 C=4   Bx=151556 sBx=20485   ; B=K40:"hire_begintime"
+  0000873: LOADK      A=4   B=0   C=41  Bx=41     sBx=-131030 ; K41:10000.0
+>>0000874: SETTABLE   A=3   B=298 C=4   Bx=152580 sBx=21509   ; B=K42:"vip_hire_begintime"
+  0000875: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0000876: SETTABLE   A=3   B=299 C=4   Bx=153092 sBx=22021   ; B=K43:"role_level"
+  0000877: LOADK      A=4   B=0   C=14  Bx=14     sBx=-131057 ; K14:8.0
+  0000878: SETTABLE   A=3   B=300 C=4   Bx=153604 sBx=22533   ; B=K44:"cha_viewarea_day"
+  0000879: LOADK      A=4   B=0   C=46  Bx=46     sBx=-131025 ; K46:-1.0
+  0000880: SETTABLE   A=3   B=301 C=4   Bx=154116 sBx=23045   ; B=K45:"min_mspd"
+  0000881: LOADK      A=4   B=0   C=91  Bx=91     sBx=-130980 ; K91:3.0
+  0000882: SETTABLE   A=3   B=303 C=4   Bx=155140 sBx=24069   ; B=K47:"cha_type"
+  0000883: LOADK      A=4   B=0   C=235 Bx=235    sBx=-130836 ; K235:99999999.0
+  0000884: SETTABLE   A=3   B=304 C=4   Bx=155652 sBx=24581   ; B=K48:"Lumber_need"
+  0000885: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+
+-- around PC 1279
+  0001271: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0001272: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0001273: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0001274: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0001275: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+  0001276: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0001277: SETTABLE   A=3   B=296 C=4   Bx=151556 sBx=20485   ; B=K40:"hire_begintime"
+  0001278: LOADK      A=4   B=0   C=41  Bx=41     sBx=-131030 ; K41:10000.0
+>>0001279: SETTABLE   A=3   B=298 C=4   Bx=152580 sBx=21509   ; B=K42:"vip_hire_begintime"
+  0001280: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0001281: SETTABLE   A=3   B=299 C=4   Bx=153092 sBx=22021   ; B=K43:"role_level"
+  0001282: LOADK      A=4   B=0   C=14  Bx=14     sBx=-131057 ; K14:8.0
+  0001283: SETTABLE   A=3   B=300 C=4   Bx=153604 sBx=22533   ; B=K44:"cha_viewarea_day"
+  0001284: LOADK      A=4   B=0   C=46  Bx=46     sBx=-131025 ; K46:-1.0
+  0001285: SETTABLE   A=3   B=301 C=4   Bx=154116 sBx=23045   ; B=K45:"min_mspd"
+  0001286: LOADK      A=4   B=0   C=91  Bx=91     sBx=-130980 ; K91:3.0
+  0001287: SETTABLE   A=3   B=303 C=4   Bx=155140 sBx=24069   ; B=K47:"cha_type"
+  0001288: LOADK      A=4   B=0   C=235 Bx=235    sBx=-130836 ; K235:99999999.0
+  0001289: SETTABLE   A=3   B=304 C=4   Bx=155652 sBx=24581   ; B=K48:"Lumber_need"
+  0001290: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+
+-- around PC 1684
+  0001676: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0001677: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0001678: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0001679: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0001680: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+  0001681: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0001682: SETTABLE   A=3   B=296 C=4   Bx=151556 sBx=20485   ; B=K40:"hire_begintime"
+  0001683: LOADK      A=4   B=0   C=41  Bx=41     sBx=-131030 ; K41:10000.0
+>>0001684: SETTABLE   A=3   B=298 C=4   Bx=152580 sBx=21509   ; B=K42:"vip_hire_begintime"
+  0001685: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0001686: SETTABLE   A=3   B=299 C=4   Bx=153092 sBx=22021   ; B=K43:"role_level"
+  0001687: LOADK      A=4   B=0   C=14  Bx=14     sBx=-131057 ; K14:8.0
+  0001688: SETTABLE   A=3   B=300 C=4   Bx=153604 sBx=22533   ; B=K44:"cha_viewarea_day"
+  0001689: LOADK      A=4   B=0   C=46  Bx=46     sBx=-131025 ; K46:-1.0
+  0001690: SETTABLE   A=3   B=301 C=4   Bx=154116 sBx=23045   ; B=K45:"min_mspd"
+  0001691: LOADK      A=4   B=0   C=91  Bx=91     sBx=-130980 ; K91:3.0
+  0001692: SETTABLE   A=3   B=303 C=4   Bx=155140 sBx=24069   ; B=K47:"cha_type"
+  0001693: LOADK      A=4   B=0   C=235 Bx=235    sBx=-130836 ; K235:99999999.0
+  0001694: SETTABLE   A=3   B=304 C=4   Bx=155652 sBx=24581   ; B=K48:"Lumber_need"
+  0001695: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+
+-- around PC 2096
+  0002088: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0002089: LOADK      A=4   B=0   C=235 Bx=235    sBx=-130836 ; K235:99999999.0
+  0002090: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0002091: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0002092: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+  0002093: LOADK      A=4   B=0   C=296 Bx=296    sBx=-130775 ; K296:5000.0
+  0002094: SETTABLE   A=3   B=296 C=4   Bx=151556 sBx=20485   ; B=K40:"hire_begintime"
+  0002095: LOADK      A=4   B=0   C=296 Bx=296    sBx=-130775 ; K296:5000.0
+>>0002096: SETTABLE   A=3   B=298 C=4   Bx=152580 sBx=21509   ; B=K42:"vip_hire_begintime"
+  0002097: LOADK      A=4   B=0   C=11  Bx=11     sBx=-131060 ; K11:5.0
+  0002098: SETTABLE   A=3   B=299 C=4   Bx=153092 sBx=22021   ; B=K43:"role_level"
+  0002099: LOADK      A=4   B=0   C=14  Bx=14     sBx=-131057 ; K14:8.0
+  0002100: SETTABLE   A=3   B=300 C=4   Bx=153604 sBx=22533   ; B=K44:"cha_viewarea_day"
+  0002101: LOADK      A=4   B=0   C=46  Bx=46     sBx=-131025 ; K46:-1.0
+  0002102: SETTABLE   A=3   B=301 C=4   Bx=154116 sBx=23045   ; B=K45:"min_mspd"
+  0002103: LOADK      A=4   B=0   C=91  Bx=91     sBx=-130980 ; K91:3.0
+  0002104: SETTABLE   A=3   B=303 C=4   Bx=155140 sBx=24069   ; B=K47:"cha_type"
+  0002105: LOADK      A=4   B=0   C=235 Bx=235    sBx=-130836 ; K235:99999999.0
+  0002106: SETTABLE   A=3   B=304 C=4   Bx=155652 sBx=24581   ; B=K48:"Lumber_need"
+  0002107: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+
+-- around PC 2155
+  0002147: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0002148: SETTABLE   A=3   B=326 C=4   Bx=166916 sBx=35845   ; B=K70:"Build_set"
+  0002149: LOADK      A=4   B=0   C=8   Bx=8      sBx=-131063 ; K8:2.0
+  0002150: SETTABLE   A=3   B=327 C=4   Bx=167428 sBx=36357   ; B=K71:"cha_AI_manner"
+  0002151: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0002152: SETTABLE   A=3   B=328 C=4   Bx=167940 sBx=36869   ; B=K72:"cha_sleephabit"
+  0002153: LOADK      A=4   B=0   C=146 Bx=146    sBx=-130925 ; K146:0.9
+  0002154: SETTABLE   A=3   B=329 C=4   Bx=168452 sBx=37381   ; B=K73:"model_scale"
+>>0002155: LOADK      A=4   B=0   C=298 Bx=298    sBx=-130773 ; K298:20.0
+  0002156: SETTABLE   A=3   B=330 C=4   Bx=168964 sBx=37893   ; B=K74:"Cha_radius"
+  0002157: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0002158: SETTABLE   A=3   B=331 C=4   Bx=169476 sBx=38405   ; B=K75:"hire_amount"
+  0002159: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0002160: SETTABLE   A=3   B=332 C=4   Bx=169988 sBx=38917   ; B=K76:"hireunit_type"
+  0002161: LOADK      A=4   B=0   C=283 Bx=283    sBx=-130788 ; K283:80.0
+  0002162: SETTABLE   A=3   B=333 C=4   Bx=170500 sBx=39429   ; B=K77:"cha_PutBlock"
+  0002163: SETTABLE   A=2   B=272 C=3   Bx=139267 sBx=8196    ; B=K16:"basic"
+  0002164: NEWTABLE   A=3   B=0   C=34  Bx=34     sBx=-131037
+  0002165: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0002166: SETTABLE   A=3   B=336 C=4   Bx=172036 sBx=40965   ; B=K80:"ChangeWithMapLevel"
+
+-- around PC 2518
+  0002510: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0002511: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0002512: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0002513: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0002514: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+  0002515: LOADK      A=4   B=0   C=3   Bx=3      sBx=-131068 ; K3:3000.0
+  0002516: SETTABLE   A=3   B=296 C=4   Bx=151556 sBx=20485   ; B=K40:"hire_begintime"
+  0002517: LOADK      A=4   B=0   C=315 Bx=315    sBx=-130756 ; K315:8000.0
+>>0002518: SETTABLE   A=3   B=298 C=4   Bx=152580 sBx=21509   ; B=K42:"vip_hire_begintime"
+  0002519: LOADK      A=4   B=0   C=11  Bx=11     sBx=-131060 ; K11:5.0
+  0002520: SETTABLE   A=3   B=299 C=4   Bx=153092 sBx=22021   ; B=K43:"role_level"
+  0002521: LOADK      A=4   B=0   C=14  Bx=14     sBx=-131057 ; K14:8.0
+  0002522: SETTABLE   A=3   B=300 C=4   Bx=153604 sBx=22533   ; B=K44:"cha_viewarea_day"
+  0002523: LOADK      A=4   B=0   C=46  Bx=46     sBx=-131025 ; K46:-1.0
+  0002524: SETTABLE   A=3   B=301 C=4   Bx=154116 sBx=23045   ; B=K45:"min_mspd"
+  0002525: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0002526: SETTABLE   A=3   B=303 C=4   Bx=155140 sBx=24069   ; B=K47:"cha_type"
+  0002527: LOADK      A=4   B=0   C=235 Bx=235    sBx=-130836 ; K235:99999999.0
+  0002528: SETTABLE   A=3   B=304 C=4   Bx=155652 sBx=24581   ; B=K48:"Lumber_need"
+  0002529: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+
+-- around PC 2939
+  0002931: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0002932: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0002933: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0002934: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0002935: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+  0002936: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0002937: SETTABLE   A=3   B=296 C=4   Bx=151556 sBx=20485   ; B=K40:"hire_begintime"
+  0002938: LOADK      A=4   B=0   C=41  Bx=41     sBx=-131030 ; K41:10000.0
+>>0002939: SETTABLE   A=3   B=298 C=4   Bx=152580 sBx=21509   ; B=K42:"vip_hire_begintime"
+  0002940: LOADK      A=4   B=0   C=91  Bx=91     sBx=-130980 ; K91:3.0
+  0002941: SETTABLE   A=3   B=299 C=4   Bx=153092 sBx=22021   ; B=K43:"role_level"
+  0002942: LOADK      A=4   B=0   C=14  Bx=14     sBx=-131057 ; K14:8.0
+  0002943: SETTABLE   A=3   B=300 C=4   Bx=153604 sBx=22533   ; B=K44:"cha_viewarea_day"
+  0002944: LOADK      A=4   B=0   C=46  Bx=46     sBx=-131025 ; K46:-1.0
+  0002945: SETTABLE   A=3   B=301 C=4   Bx=154116 sBx=23045   ; B=K45:"min_mspd"
+  0002946: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0002947: SETTABLE   A=3   B=303 C=4   Bx=155140 sBx=24069   ; B=K47:"cha_type"
+  0002948: LOADK      A=4   B=0   C=235 Bx=235    sBx=-130836 ; K235:99999999.0
+  0002949: SETTABLE   A=3   B=304 C=4   Bx=155652 sBx=24581   ; B=K48:"Lumber_need"
+  0002950: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+
+====================================================================================================
+proto=1 path=0.0 depth=1 const=1391 value=隐藏英雄，输入秘籍才能使用
+line_defined=0 last_line=0 code=223480 consts=3159 children=0
+PC references: [(54849, ['Bx']), (56525, ['Bx']), (58640, ['Bx']), (93818, ['Bx']), (117874, ['Bx']), (122493, ['Bx']), (146722, ['Bx']), (147145, ['Bx']), (183823, ['Bx']), (198066, ['Bx']), (202262, ['Bx']), (204778, ['Bx']), (218879, ['Bx'])]
+
+-- around PC 54849
+  0054841: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0054842: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0054843: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0054844: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0054845: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0054846: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0054847: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0054848: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0054849: LOADK      A=4   B=2   C=367 Bx=1391   sBx=-129680 ; K1391:"隐藏英雄，输入秘籍才能使用"
+  0054850: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0054851: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0054852: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0054853: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0054854: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0054855: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0054856: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0054857: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0054858: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0054859: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0054860: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 56525
+  0056517: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0056518: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0056519: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0056520: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0056521: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0056522: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0056523: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0056524: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0056525: LOADK      A=4   B=2   C=367 Bx=1391   sBx=-129680 ; K1391:"隐藏英雄，输入秘籍才能使用"
+  0056526: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0056527: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0056528: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0056529: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0056530: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0056531: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0056532: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0056533: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0056534: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0056535: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0056536: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 58640
+  0058632: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0058633: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0058634: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0058635: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0058636: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0058637: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0058638: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0058639: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0058640: LOADK      A=4   B=2   C=367 Bx=1391   sBx=-129680 ; K1391:"隐藏英雄，输入秘籍才能使用"
+  0058641: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0058642: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0058643: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0058644: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0058645: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0058646: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0058647: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0058648: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0058649: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0058650: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0058651: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 93818
+  0093810: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0093811: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0093812: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0093813: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0093814: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0093815: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0093816: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0093817: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0093818: LOADK      A=4   B=2   C=367 Bx=1391   sBx=-129680 ; K1391:"隐藏英雄，输入秘籍才能使用"
+  0093819: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0093820: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0093821: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0093822: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0093823: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0093824: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0093825: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0093826: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0093827: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0093828: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0093829: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 117874
+  0117866: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0117867: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0117868: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0117869: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0117870: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0117871: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0117872: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0117873: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0117874: LOADK      A=4   B=2   C=367 Bx=1391   sBx=-129680 ; K1391:"隐藏英雄，输入秘籍才能使用"
+  0117875: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0117876: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0117877: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0117878: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0117879: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0117880: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0117881: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0117882: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0117883: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0117884: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0117885: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 122493
+  0122485: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0122486: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0122487: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0122488: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0122489: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0122490: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0122491: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0122492: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0122493: LOADK      A=4   B=2   C=367 Bx=1391   sBx=-129680 ; K1391:"隐藏英雄，输入秘籍才能使用"
+  0122494: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0122495: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0122496: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0122497: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0122498: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0122499: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0122500: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0122501: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0122502: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0122503: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0122504: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 146722
+  0146714: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0146715: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0146716: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0146717: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0146718: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0146719: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0146720: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0146721: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0146722: LOADK      A=4   B=2   C=367 Bx=1391   sBx=-129680 ; K1391:"隐藏英雄，输入秘籍才能使用"
+  0146723: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0146724: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0146725: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0146726: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0146727: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0146728: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0146729: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0146730: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0146731: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0146732: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0146733: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 147145
+  0147137: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0147138: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0147139: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0147140: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0147141: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0147142: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0147143: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0147144: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0147145: LOADK      A=4   B=2   C=367 Bx=1391   sBx=-129680 ; K1391:"隐藏英雄，输入秘籍才能使用"
+  0147146: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0147147: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0147148: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0147149: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0147150: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0147151: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0147152: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0147153: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0147154: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0147155: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0147156: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 183823
+  0183815: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0183816: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0183817: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0183818: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0183819: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0183820: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0183821: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0183822: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0183823: LOADK      A=4   B=2   C=367 Bx=1391   sBx=-129680 ; K1391:"隐藏英雄，输入秘籍才能使用"
+  0183824: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0183825: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0183826: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0183827: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0183828: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0183829: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0183830: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0183831: LOADK      A=4   B=0   C=235 Bx=235    sBx=-130836 ; K235:99999999.0
+  0183832: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0183833: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0183834: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 198066
+  0198058: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0198059: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0198060: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0198061: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0198062: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0198063: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0198064: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0198065: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0198066: LOADK      A=4   B=2   C=367 Bx=1391   sBx=-129680 ; K1391:"隐藏英雄，输入秘籍才能使用"
+  0198067: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0198068: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0198069: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0198070: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0198071: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0198072: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0198073: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0198074: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0198075: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0198076: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0198077: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+====================================================================================================
+proto=1 path=0.0 depth=1 const=1424 value=【赞助一】
+line_defined=0 last_line=0 code=223480 consts=3159 children=0
+PC references: [(56180, ['Bx'])]
+
+-- around PC 56180
+  0056172: LOADK      A=4   B=0   C=55  Bx=55     sBx=-131016 ; K55:255.0
+  0056173: SETTABLE   A=3   B=320 C=4   Bx=163844 sBx=32773   ; B=K64:"Build_A"
+  0056174: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0056175: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0056176: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0056177: SETTABLE   A=3   B=321 C=4   Bx=164356 sBx=33285   ; B=K65:"death_lost_item_Prob"
+  0056178: LOADK      A=4   B=0   C=55  Bx=55     sBx=-131016 ; K55:255.0
+  0056179: SETTABLE   A=3   B=322 C=4   Bx=164868 sBx=33797   ; B=K66:"Build_G"
+>>0056180: LOADK      A=4   B=2   C=400 Bx=1424   sBx=-129647 ; K1424:"【赞助一】"
+  0056181: SETTABLE   A=3   B=323 C=4   Bx=165380 sBx=34309   ; B=K67:"name"
+  0056182: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0056183: SETTABLE   A=3   B=325 C=4   Bx=166404 sBx=35333   ; B=K69:"build_unit"
+  0056184: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0056185: SETTABLE   A=3   B=326 C=4   Bx=166916 sBx=35845   ; B=K70:"Build_set"
+  0056186: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0056187: SETTABLE   A=3   B=327 C=4   Bx=167428 sBx=36357   ; B=K71:"cha_AI_manner"
+  0056188: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0056189: SETTABLE   A=3   B=328 C=4   Bx=167940 sBx=36869   ; B=K72:"cha_sleephabit"
+  0056190: LOADK      A=4   B=1   C=266 Bx=778    sBx=-130293 ; K778:0.43
+  0056191: SETTABLE   A=3   B=329 C=4   Bx=168452 sBx=37381   ; B=K73:"model_scale"
+
+====================================================================================================
+proto=1 path=0.0 depth=1 const=1828 value=★赞助专属英雄★;r=255;g=255;b=0;
+line_defined=0 last_line=0 code=223480 consts=3159 children=0
+PC references: [(85984, ['Bx']), (95915, ['Bx']), (139243, ['Bx']), (140079, ['Bx']), (140502, ['Bx']), (141337, ['Bx']), (151684, ['Bx']), (175805, ['Bx']), (176228, ['Bx']), (176651, ['Bx']), (177485, ['Bx']), (177908, ['Bx']), (178332, ['Bx']), (179170, ['Bx']), (179593, ['Bx']), (180016, ['Bx']), (180439, ['Bx']), (180862, ['Bx']), (181285, ['Bx']), (181708, ['Bx']), (182131, ['Bx']), (182554, ['Bx']), (182977, ['Bx']), (183400, ['Bx']), (203528, ['Bx']), (219302, ['Bx']), (219725, ['Bx']), (220148, ['Bx']), (220572, ['Bx']), (221836, ['Bx']), (222260, ['Bx']), (222683, ['Bx']), (223107, ['Bx'])]
+
+-- around PC 85984
+  0085976: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0085977: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0085978: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0085979: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0085980: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0085981: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0085982: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0085983: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0085984: LOADK      A=4   B=3   C=292 Bx=1828   sBx=-129243 ; K1828:"★赞助专属英雄★;r=255;g=255;b=0;"
+  0085985: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0085986: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0085987: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0085988: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0085989: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0085990: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0085991: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0085992: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0085993: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0085994: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0085995: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 95915
+  0095907: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0095908: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0095909: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0095910: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0095911: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0095912: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0095913: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0095914: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0095915: LOADK      A=4   B=3   C=292 Bx=1828   sBx=-129243 ; K1828:"★赞助专属英雄★;r=255;g=255;b=0;"
+  0095916: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0095917: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0095918: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0095919: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0095920: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0095921: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0095922: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0095923: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0095924: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0095925: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0095926: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 139243
+  0139235: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0139236: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0139237: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0139238: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0139239: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0139240: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0139241: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0139242: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0139243: LOADK      A=4   B=3   C=292 Bx=1828   sBx=-129243 ; K1828:"★赞助专属英雄★;r=255;g=255;b=0;"
+  0139244: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0139245: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0139246: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0139247: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0139248: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0139249: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0139250: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0139251: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0139252: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0139253: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0139254: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 140079
+  0140071: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0140072: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0140073: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0140074: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0140075: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0140076: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0140077: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0140078: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0140079: LOADK      A=4   B=3   C=292 Bx=1828   sBx=-129243 ; K1828:"★赞助专属英雄★;r=255;g=255;b=0;"
+  0140080: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0140081: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0140082: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0140083: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0140084: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0140085: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0140086: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0140087: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0140088: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0140089: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0140090: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 140502
+  0140494: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0140495: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0140496: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0140497: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0140498: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0140499: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0140500: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0140501: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0140502: LOADK      A=4   B=3   C=292 Bx=1828   sBx=-129243 ; K1828:"★赞助专属英雄★;r=255;g=255;b=0;"
+  0140503: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0140504: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0140505: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0140506: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0140507: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0140508: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0140509: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0140510: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0140511: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0140512: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0140513: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 141337
+  0141329: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0141330: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0141331: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0141332: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0141333: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0141334: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0141335: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0141336: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0141337: LOADK      A=4   B=3   C=292 Bx=1828   sBx=-129243 ; K1828:"★赞助专属英雄★;r=255;g=255;b=0;"
+  0141338: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0141339: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0141340: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0141341: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0141342: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0141343: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0141344: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0141345: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0141346: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0141347: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0141348: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 151684
+  0151676: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0151677: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0151678: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0151679: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0151680: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0151681: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0151682: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0151683: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0151684: LOADK      A=4   B=3   C=292 Bx=1828   sBx=-129243 ; K1828:"★赞助专属英雄★;r=255;g=255;b=0;"
+  0151685: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0151686: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0151687: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0151688: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0151689: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0151690: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0151691: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0151692: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0151693: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0151694: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0151695: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 175805
+  0175797: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0175798: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0175799: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0175800: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0175801: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0175802: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0175803: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0175804: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0175805: LOADK      A=4   B=3   C=292 Bx=1828   sBx=-129243 ; K1828:"★赞助专属英雄★;r=255;g=255;b=0;"
+  0175806: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0175807: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0175808: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0175809: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0175810: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0175811: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0175812: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0175813: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0175814: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0175815: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0175816: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 176228
+  0176220: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0176221: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0176222: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0176223: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0176224: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0176225: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0176226: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0176227: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0176228: LOADK      A=4   B=3   C=292 Bx=1828   sBx=-129243 ; K1828:"★赞助专属英雄★;r=255;g=255;b=0;"
+  0176229: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0176230: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0176231: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0176232: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0176233: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0176234: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0176235: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0176236: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0176237: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0176238: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0176239: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+-- around PC 176651
+  0176643: SETTABLE   A=3   B=284 C=4   Bx=145412 sBx=14341   ; B=K28:"hire_needclose"
+  0176644: SETTABLE   A=3   B=285 C=286 Bx=146206 sBx=15135   ; B=K29:"unit_UI_tip", C=K30:""
+  0176645: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0176646: SETTABLE   A=3   B=287 C=4   Bx=146948 sBx=15877   ; B=K31:"hireshop_type"
+  0176647: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0176648: SETTABLE   A=3   B=288 C=4   Bx=147460 sBx=16389   ; B=K32:"Upgrade_set"
+  0176649: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0176650: SETTABLE   A=3   B=289 C=4   Bx=147972 sBx=16901   ; B=K33:"Build_type"
+>>0176651: LOADK      A=4   B=3   C=292 Bx=1828   sBx=-129243 ; K1828:"★赞助专属英雄★;r=255;g=255;b=0;"
+  0176652: SETTABLE   A=3   B=290 C=4   Bx=148484 sBx=17413   ; B=K34:"unit_hint"
+  0176653: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0176654: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0176655: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0176656: SETTABLE   A=3   B=291 C=4   Bx=148996 sBx=17925   ; B=K35:"FunctionList"
+  0176657: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0176658: SETTABLE   A=3   B=292 C=4   Bx=149508 sBx=18437   ; B=K36:"hire_pannel"
+  0176659: LOADK      A=4   B=0   C=38  Bx=38     sBx=-131033 ; K38:19999999.0
+  0176660: SETTABLE   A=3   B=293 C=4   Bx=150020 sBx=18949   ; B=K37:"hire_cooldown"
+  0176661: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0176662: SETTABLE   A=3   B=295 C=4   Bx=151044 sBx=19973   ; B=K39:"cha_AI_Call"
+
+====================================================================================================
+proto=1 path=0.0 depth=1 const=2792 value=【赞助二】
+line_defined=0 last_line=0 code=223480 consts=3159 children=0
+PC references: [(178825, ['Bx'])]
+
+-- around PC 178825
+  0178817: LOADK      A=4   B=0   C=55  Bx=55     sBx=-131016 ; K55:255.0
+  0178818: SETTABLE   A=3   B=320 C=4   Bx=163844 sBx=32773   ; B=K64:"Build_A"
+  0178819: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0178820: LOADK      A=5   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0178821: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0178822: SETTABLE   A=3   B=321 C=4   Bx=164356 sBx=33285   ; B=K65:"death_lost_item_Prob"
+  0178823: LOADK      A=4   B=0   C=55  Bx=55     sBx=-131016 ; K55:255.0
+  0178824: SETTABLE   A=3   B=322 C=4   Bx=164868 sBx=33797   ; B=K66:"Build_G"
+>>0178825: LOADK      A=4   B=5   C=232 Bx=2792   sBx=-128279 ; K2792:"【赞助二】"
+  0178826: SETTABLE   A=3   B=323 C=4   Bx=165380 sBx=34309   ; B=K67:"name"
+  0178827: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0178828: SETTABLE   A=3   B=325 C=4   Bx=166404 sBx=35333   ; B=K69:"build_unit"
+  0178829: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0178830: SETTABLE   A=3   B=326 C=4   Bx=166916 sBx=35845   ; B=K70:"Build_set"
+  0178831: LOADK      A=4   B=0   C=4   Bx=4      sBx=-131067 ; K4:1.0
+  0178832: SETTABLE   A=3   B=327 C=4   Bx=167428 sBx=36357   ; B=K71:"cha_AI_manner"
+  0178833: LOADK      A=4   B=0   C=20  Bx=20     sBx=-131051 ; K20:0.0
+  0178834: SETTABLE   A=3   B=328 C=4   Bx=167940 sBx=36869   ; B=K72:"cha_sleephabit"
+  0178835: LOADK      A=4   B=1   C=266 Bx=778    sBx=-130293 ; K778:0.43
+  0178836: SETTABLE   A=3   B=329 C=4   Bx=168452 sBx=37381   ; B=K73:"model_scale"
+
+====================================================================================================
+proto=7 path=0.6 depth=1 const=53 value=vip_advantage
+line_defined=0 last_line=0 code=109759 consts=2258 children=0
+PC references: [(79, ['B/RK']), (191, ['B/RK']), (300, ['B/RK']), (409, ['B/RK']), (521, ['B/RK']), (633, ['B/RK']), (742, ['B/RK']), (854, ['B/RK']), (963, ['B/RK']), (1072, ['B/RK']), (1181, ['B/RK']), (1290, ['B/RK']), (1399, ['B/RK']), (1508, ['B/RK']), (1616, ['B/RK']), (1725, ['B/RK']), (1834, ['B/RK']), (1943, ['B/RK']), (2052, ['B/RK']), (2161, ['B/RK']), (2270, ['B/RK']), (2378, ['B/RK']), (2487, ['B/RK']), (2596, ['B/RK']), (2705, ['B/RK']), (2814, ['B/RK']), (2923, ['B/RK']), (3032, ['B/RK']), (3141, ['B/RK']), (3249, ['B/RK']), (3358, ['B/RK']), (3504, ['B/RK']), (3667, ['B/RK']), (3830, ['B/RK']), (3993, ['B/RK']), (4156, ['B/RK']), (4318, ['B/RK']), (4480, ['B/RK']), (4642, ['B/RK']), (4805, ['B/RK']), (4968, ['B/RK']), (5131, ['B/RK']), (5293, ['B/RK']), (5456, ['B/RK']), (5600, ['C/RK']), (5618, ['B/RK']), (5780, ['B/RK']), (5942, ['B/RK']), (6105, ['B/RK']), (6272, ['B/RK'])]
+
+-- around PC 79
+  0000071: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000072: SETTABLE   A=2   B=301 C=3   Bx=154115 sBx=23044   ; B=K45:"Item_MissionList"
+  0000073: SETTABLE   A=2   B=302 C=260 Bx=154884 sBx=23813   ; B=K46:"Item_CanDrop", C=K4:1.0
+  0000074: SETTABLE   A=2   B=303 C=264 Bx=155400 sBx=24329   ; B=K47:"Item_IsGrowUp", C=K8:0.0
+  0000075: SETTABLE   A=2   B=304 C=264 Bx=155912 sBx=24841   ; B=K48:"Item_needshengwangpoint", C=K8:0.0
+  0000076: SETTABLE   A=2   B=305 C=306 Bx=156466 sBx=25395   ; B=K49:"name", C=K50:"没有"
+  0000077: SETTABLE   A=2   B=307 C=267 Bx=157451 sBx=26380   ; B=K51:"Item_lable_G", C=K11:255.0
+  0000078: SETTABLE   A=2   B=308 C=260 Bx=157956 sBx=26885   ; B=K52:"Item_CanGive", C=K4:1.0
+>>0000079: SETTABLE   A=2   B=309 C=264 Bx=158472 sBx=27401   ; B=K53:"vip_advantage", C=K8:0.0
+  0000080: SETTABLE   A=2   B=310 C=264 Bx=158984 sBx=27913   ; B=K54:"Item_isExchange", C=K8:0.0
+  0000081: SETTABLE   A=2   B=311 C=260 Bx=159492 sBx=28421   ; B=K55:"Item_shopamount", C=K4:1.0
+  0000082: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000083: SETTABLE   A=2   B=312 C=3   Bx=159747 sBx=28676   ; B=K56:"Item_BelongHero"
+  0000084: SETTABLE   A=2   B=313 C=272 Bx=160528 sBx=29457   ; B=K57:"Item_eff_num", C=K16:100.0
+  0000085: SETTABLE   A=2   B=314 C=264 Bx=161032 sBx=29961   ; B=K58:"Item_isUpgrade", C=K8:0.0
+  0000086: SETTABLE   A=2   B=315 C=264 Bx=161544 sBx=30473   ; B=K59:"Item_Upgrade_NextItem", C=K8:0.0
+  0000087: SETTABLE   A=2   B=316 C=260 Bx=162052 sBx=30981   ; B=K60:"Can_stack", C=K4:1.0
+  0000088: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000089: SETTABLE   A=2   B=317 C=3   Bx=162307 sBx=31236   ; B=K61:"Item_magicBookSkill"
+  0000090: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+
+-- around PC 191
+  0000183: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000184: SETTABLE   A=2   B=301 C=3   Bx=154115 sBx=23044   ; B=K45:"Item_MissionList"
+  0000185: SETTABLE   A=2   B=302 C=260 Bx=154884 sBx=23813   ; B=K46:"Item_CanDrop", C=K4:1.0
+  0000186: SETTABLE   A=2   B=303 C=264 Bx=155400 sBx=24329   ; B=K47:"Item_IsGrowUp", C=K8:0.0
+  0000187: SETTABLE   A=2   B=304 C=264 Bx=155912 sBx=24841   ; B=K48:"Item_needshengwangpoint", C=K8:0.0
+  0000188: SETTABLE   A=2   B=305 C=343 Bx=156503 sBx=25432   ; B=K49:"name", C=K87:"00001"
+  0000189: SETTABLE   A=2   B=307 C=267 Bx=157451 sBx=26380   ; B=K51:"Item_lable_G", C=K11:255.0
+  0000190: SETTABLE   A=2   B=308 C=260 Bx=157956 sBx=26885   ; B=K52:"Item_CanGive", C=K4:1.0
+>>0000191: SETTABLE   A=2   B=309 C=264 Bx=158472 sBx=27401   ; B=K53:"vip_advantage", C=K8:0.0
+  0000192: SETTABLE   A=2   B=310 C=264 Bx=158984 sBx=27913   ; B=K54:"Item_isExchange", C=K8:0.0
+  0000193: SETTABLE   A=2   B=311 C=260 Bx=159492 sBx=28421   ; B=K55:"Item_shopamount", C=K4:1.0
+  0000194: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000195: SETTABLE   A=2   B=312 C=3   Bx=159747 sBx=28676   ; B=K56:"Item_BelongHero"
+  0000196: SETTABLE   A=2   B=313 C=344 Bx=160600 sBx=29529   ; B=K57:"Item_eff_num", C=K88:250.0
+  0000197: SETTABLE   A=2   B=314 C=264 Bx=161032 sBx=29961   ; B=K58:"Item_isUpgrade", C=K8:0.0
+  0000198: SETTABLE   A=2   B=315 C=264 Bx=161544 sBx=30473   ; B=K59:"Item_Upgrade_NextItem", C=K8:0.0
+  0000199: SETTABLE   A=2   B=316 C=260 Bx=162052 sBx=30981   ; B=K60:"Can_stack", C=K4:1.0
+  0000200: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000201: SETTABLE   A=2   B=317 C=3   Bx=162307 sBx=31236   ; B=K61:"Item_magicBookSkill"
+  0000202: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+
+-- around PC 300
+  0000292: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000293: SETTABLE   A=2   B=301 C=3   Bx=154115 sBx=23044   ; B=K45:"Item_MissionList"
+  0000294: SETTABLE   A=2   B=302 C=260 Bx=154884 sBx=23813   ; B=K46:"Item_CanDrop", C=K4:1.0
+  0000295: SETTABLE   A=2   B=303 C=264 Bx=155400 sBx=24329   ; B=K47:"Item_IsGrowUp", C=K8:0.0
+  0000296: SETTABLE   A=2   B=304 C=264 Bx=155912 sBx=24841   ; B=K48:"Item_needshengwangpoint", C=K8:0.0
+  0000297: SETTABLE   A=2   B=305 C=343 Bx=156503 sBx=25432   ; B=K49:"name", C=K87:"00001"
+  0000298: SETTABLE   A=2   B=307 C=267 Bx=157451 sBx=26380   ; B=K51:"Item_lable_G", C=K11:255.0
+  0000299: SETTABLE   A=2   B=308 C=260 Bx=157956 sBx=26885   ; B=K52:"Item_CanGive", C=K4:1.0
+>>0000300: SETTABLE   A=2   B=309 C=264 Bx=158472 sBx=27401   ; B=K53:"vip_advantage", C=K8:0.0
+  0000301: SETTABLE   A=2   B=310 C=264 Bx=158984 sBx=27913   ; B=K54:"Item_isExchange", C=K8:0.0
+  0000302: SETTABLE   A=2   B=311 C=260 Bx=159492 sBx=28421   ; B=K55:"Item_shopamount", C=K4:1.0
+  0000303: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000304: SETTABLE   A=2   B=312 C=3   Bx=159747 sBx=28676   ; B=K56:"Item_BelongHero"
+  0000305: SETTABLE   A=2   B=313 C=352 Bx=160608 sBx=29537   ; B=K57:"Item_eff_num", C=K96:10.0
+  0000306: SETTABLE   A=2   B=314 C=264 Bx=161032 sBx=29961   ; B=K58:"Item_isUpgrade", C=K8:0.0
+  0000307: SETTABLE   A=2   B=315 C=264 Bx=161544 sBx=30473   ; B=K59:"Item_Upgrade_NextItem", C=K8:0.0
+  0000308: SETTABLE   A=2   B=316 C=260 Bx=162052 sBx=30981   ; B=K60:"Can_stack", C=K4:1.0
+  0000309: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000310: SETTABLE   A=2   B=317 C=3   Bx=162307 sBx=31236   ; B=K61:"Item_magicBookSkill"
+  0000311: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+
+-- around PC 409
+  0000401: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000402: SETTABLE   A=2   B=301 C=3   Bx=154115 sBx=23044   ; B=K45:"Item_MissionList"
+  0000403: SETTABLE   A=2   B=302 C=260 Bx=154884 sBx=23813   ; B=K46:"Item_CanDrop", C=K4:1.0
+  0000404: SETTABLE   A=2   B=303 C=264 Bx=155400 sBx=24329   ; B=K47:"Item_IsGrowUp", C=K8:0.0
+  0000405: SETTABLE   A=2   B=304 C=264 Bx=155912 sBx=24841   ; B=K48:"Item_needshengwangpoint", C=K8:0.0
+  0000406: SETTABLE   A=2   B=305 C=343 Bx=156503 sBx=25432   ; B=K49:"name", C=K87:"00001"
+  0000407: SETTABLE   A=2   B=307 C=267 Bx=157451 sBx=26380   ; B=K51:"Item_lable_G", C=K11:255.0
+  0000408: SETTABLE   A=2   B=308 C=260 Bx=157956 sBx=26885   ; B=K52:"Item_CanGive", C=K4:1.0
+>>0000409: SETTABLE   A=2   B=309 C=264 Bx=158472 sBx=27401   ; B=K53:"vip_advantage", C=K8:0.0
+  0000410: SETTABLE   A=2   B=310 C=264 Bx=158984 sBx=27913   ; B=K54:"Item_isExchange", C=K8:0.0
+  0000411: SETTABLE   A=2   B=311 C=260 Bx=159492 sBx=28421   ; B=K55:"Item_shopamount", C=K4:1.0
+  0000412: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000413: SETTABLE   A=2   B=312 C=3   Bx=159747 sBx=28676   ; B=K56:"Item_BelongHero"
+  0000414: SETTABLE   A=2   B=313 C=272 Bx=160528 sBx=29457   ; B=K57:"Item_eff_num", C=K16:100.0
+  0000415: SETTABLE   A=2   B=314 C=264 Bx=161032 sBx=29961   ; B=K58:"Item_isUpgrade", C=K8:0.0
+  0000416: SETTABLE   A=2   B=315 C=264 Bx=161544 sBx=30473   ; B=K59:"Item_Upgrade_NextItem", C=K8:0.0
+  0000417: SETTABLE   A=2   B=316 C=260 Bx=162052 sBx=30981   ; B=K60:"Can_stack", C=K4:1.0
+  0000418: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000419: SETTABLE   A=2   B=317 C=3   Bx=162307 sBx=31236   ; B=K61:"Item_magicBookSkill"
+  0000420: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+
+-- around PC 521
+  0000513: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000514: SETTABLE   A=2   B=301 C=3   Bx=154115 sBx=23044   ; B=K45:"Item_MissionList"
+  0000515: SETTABLE   A=2   B=302 C=260 Bx=154884 sBx=23813   ; B=K46:"Item_CanDrop", C=K4:1.0
+  0000516: SETTABLE   A=2   B=303 C=264 Bx=155400 sBx=24329   ; B=K47:"Item_IsGrowUp", C=K8:0.0
+  0000517: SETTABLE   A=2   B=304 C=264 Bx=155912 sBx=24841   ; B=K48:"Item_needshengwangpoint", C=K8:0.0
+  0000518: SETTABLE   A=2   B=305 C=343 Bx=156503 sBx=25432   ; B=K49:"name", C=K87:"00001"
+  0000519: SETTABLE   A=2   B=307 C=267 Bx=157451 sBx=26380   ; B=K51:"Item_lable_G", C=K11:255.0
+  0000520: SETTABLE   A=2   B=308 C=260 Bx=157956 sBx=26885   ; B=K52:"Item_CanGive", C=K4:1.0
+>>0000521: SETTABLE   A=2   B=309 C=264 Bx=158472 sBx=27401   ; B=K53:"vip_advantage", C=K8:0.0
+  0000522: SETTABLE   A=2   B=310 C=264 Bx=158984 sBx=27913   ; B=K54:"Item_isExchange", C=K8:0.0
+  0000523: SETTABLE   A=2   B=311 C=260 Bx=159492 sBx=28421   ; B=K55:"Item_shopamount", C=K4:1.0
+  0000524: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000525: SETTABLE   A=2   B=312 C=3   Bx=159747 sBx=28676   ; B=K56:"Item_BelongHero"
+  0000526: SETTABLE   A=2   B=313 C=264 Bx=160520 sBx=29449   ; B=K57:"Item_eff_num", C=K8:0.0
+  0000527: SETTABLE   A=2   B=314 C=264 Bx=161032 sBx=29961   ; B=K58:"Item_isUpgrade", C=K8:0.0
+  0000528: SETTABLE   A=2   B=315 C=264 Bx=161544 sBx=30473   ; B=K59:"Item_Upgrade_NextItem", C=K8:0.0
+  0000529: SETTABLE   A=2   B=316 C=264 Bx=162056 sBx=30985   ; B=K60:"Can_stack", C=K8:0.0
+  0000530: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000531: SETTABLE   A=2   B=317 C=3   Bx=162307 sBx=31236   ; B=K61:"Item_magicBookSkill"
+  0000532: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+
+-- around PC 633
+  0000625: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000626: SETTABLE   A=2   B=301 C=3   Bx=154115 sBx=23044   ; B=K45:"Item_MissionList"
+  0000627: SETTABLE   A=2   B=302 C=260 Bx=154884 sBx=23813   ; B=K46:"Item_CanDrop", C=K4:1.0
+  0000628: SETTABLE   A=2   B=303 C=264 Bx=155400 sBx=24329   ; B=K47:"Item_IsGrowUp", C=K8:0.0
+  0000629: SETTABLE   A=2   B=304 C=264 Bx=155912 sBx=24841   ; B=K48:"Item_needshengwangpoint", C=K8:0.0
+  0000630: SETTABLE   A=2   B=305 C=367 Bx=156527 sBx=25456   ; B=K49:"name", C=K111:"饰品升级"
+  0000631: SETTABLE   A=2   B=307 C=267 Bx=157451 sBx=26380   ; B=K51:"Item_lable_G", C=K11:255.0
+  0000632: SETTABLE   A=2   B=308 C=260 Bx=157956 sBx=26885   ; B=K52:"Item_CanGive", C=K4:1.0
+>>0000633: SETTABLE   A=2   B=309 C=264 Bx=158472 sBx=27401   ; B=K53:"vip_advantage", C=K8:0.0
+  0000634: SETTABLE   A=2   B=310 C=264 Bx=158984 sBx=27913   ; B=K54:"Item_isExchange", C=K8:0.0
+  0000635: SETTABLE   A=2   B=311 C=260 Bx=159492 sBx=28421   ; B=K55:"Item_shopamount", C=K4:1.0
+  0000636: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000637: SETTABLE   A=2   B=312 C=3   Bx=159747 sBx=28676   ; B=K56:"Item_BelongHero"
+  0000638: SETTABLE   A=2   B=313 C=264 Bx=160520 sBx=29449   ; B=K57:"Item_eff_num", C=K8:0.0
+  0000639: SETTABLE   A=2   B=314 C=260 Bx=161028 sBx=29957   ; B=K58:"Item_isUpgrade", C=K4:1.0
+  0000640: SETTABLE   A=2   B=315 C=260 Bx=161540 sBx=30469   ; B=K59:"Item_Upgrade_NextItem", C=K4:1.0
+  0000641: SETTABLE   A=2   B=316 C=264 Bx=162056 sBx=30985   ; B=K60:"Can_stack", C=K8:0.0
+  0000642: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000643: SETTABLE   A=2   B=317 C=3   Bx=162307 sBx=31236   ; B=K61:"Item_magicBookSkill"
+  0000644: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+
+-- around PC 742
+  0000734: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000735: SETTABLE   A=2   B=301 C=3   Bx=154115 sBx=23044   ; B=K45:"Item_MissionList"
+  0000736: SETTABLE   A=2   B=302 C=260 Bx=154884 sBx=23813   ; B=K46:"Item_CanDrop", C=K4:1.0
+  0000737: SETTABLE   A=2   B=303 C=264 Bx=155400 sBx=24329   ; B=K47:"Item_IsGrowUp", C=K8:0.0
+  0000738: SETTABLE   A=2   B=304 C=264 Bx=155912 sBx=24841   ; B=K48:"Item_needshengwangpoint", C=K8:0.0
+  0000739: SETTABLE   A=2   B=305 C=343 Bx=156503 sBx=25432   ; B=K49:"name", C=K87:"00001"
+  0000740: SETTABLE   A=2   B=307 C=267 Bx=157451 sBx=26380   ; B=K51:"Item_lable_G", C=K11:255.0
+  0000741: SETTABLE   A=2   B=308 C=260 Bx=157956 sBx=26885   ; B=K52:"Item_CanGive", C=K4:1.0
+>>0000742: SETTABLE   A=2   B=309 C=264 Bx=158472 sBx=27401   ; B=K53:"vip_advantage", C=K8:0.0
+  0000743: SETTABLE   A=2   B=310 C=264 Bx=158984 sBx=27913   ; B=K54:"Item_isExchange", C=K8:0.0
+  0000744: SETTABLE   A=2   B=311 C=347 Bx=159579 sBx=28508   ; B=K55:"Item_shopamount", C=K91:99.0
+  0000745: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000746: SETTABLE   A=2   B=312 C=3   Bx=159747 sBx=28676   ; B=K56:"Item_BelongHero"
+  0000747: SETTABLE   A=2   B=313 C=374 Bx=160630 sBx=29559   ; B=K57:"Item_eff_num", C=K118:1000.0
+  0000748: SETTABLE   A=2   B=314 C=264 Bx=161032 sBx=29961   ; B=K58:"Item_isUpgrade", C=K8:0.0
+  0000749: SETTABLE   A=2   B=315 C=264 Bx=161544 sBx=30473   ; B=K59:"Item_Upgrade_NextItem", C=K8:0.0
+  0000750: SETTABLE   A=2   B=316 C=260 Bx=162052 sBx=30981   ; B=K60:"Can_stack", C=K4:1.0
+  0000751: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000752: SETTABLE   A=2   B=317 C=3   Bx=162307 sBx=31236   ; B=K61:"Item_magicBookSkill"
+  0000753: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+
+-- around PC 854
+  0000846: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000847: SETTABLE   A=2   B=301 C=3   Bx=154115 sBx=23044   ; B=K45:"Item_MissionList"
+  0000848: SETTABLE   A=2   B=302 C=260 Bx=154884 sBx=23813   ; B=K46:"Item_CanDrop", C=K4:1.0
+  0000849: SETTABLE   A=2   B=303 C=264 Bx=155400 sBx=24329   ; B=K47:"Item_IsGrowUp", C=K8:0.0
+  0000850: SETTABLE   A=2   B=304 C=264 Bx=155912 sBx=24841   ; B=K48:"Item_needshengwangpoint", C=K8:0.0
+  0000851: SETTABLE   A=2   B=305 C=382 Bx=156542 sBx=25471   ; B=K49:"name", C=K126:"〖九天惊雷〗"
+  0000852: SETTABLE   A=2   B=307 C=383 Bx=157567 sBx=26496   ; B=K51:"Item_lable_G", C=K127:150.0
+  0000853: SETTABLE   A=2   B=308 C=260 Bx=157956 sBx=26885   ; B=K52:"Item_CanGive", C=K4:1.0
+>>0000854: SETTABLE   A=2   B=309 C=264 Bx=158472 sBx=27401   ; B=K53:"vip_advantage", C=K8:0.0
+  0000855: SETTABLE   A=2   B=310 C=264 Bx=158984 sBx=27913   ; B=K54:"Item_isExchange", C=K8:0.0
+  0000856: SETTABLE   A=2   B=311 C=260 Bx=159492 sBx=28421   ; B=K55:"Item_shopamount", C=K4:1.0
+  0000857: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000858: SETTABLE   A=2   B=312 C=3   Bx=159747 sBx=28676   ; B=K56:"Item_BelongHero"
+  0000859: SETTABLE   A=2   B=313 C=264 Bx=160520 sBx=29449   ; B=K57:"Item_eff_num", C=K8:0.0
+  0000860: SETTABLE   A=2   B=314 C=264 Bx=161032 sBx=29961   ; B=K58:"Item_isUpgrade", C=K8:0.0
+  0000861: SETTABLE   A=2   B=315 C=264 Bx=161544 sBx=30473   ; B=K59:"Item_Upgrade_NextItem", C=K8:0.0
+  0000862: SETTABLE   A=2   B=316 C=264 Bx=162056 sBx=30985   ; B=K60:"Can_stack", C=K8:0.0
+  0000863: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000864: SETTABLE   A=2   B=317 C=3   Bx=162307 sBx=31236   ; B=K61:"Item_magicBookSkill"
+  0000865: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+
+-- around PC 963
+  0000955: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000956: SETTABLE   A=2   B=301 C=3   Bx=154115 sBx=23044   ; B=K45:"Item_MissionList"
+  0000957: SETTABLE   A=2   B=302 C=260 Bx=154884 sBx=23813   ; B=K46:"Item_CanDrop", C=K4:1.0
+  0000958: SETTABLE   A=2   B=303 C=264 Bx=155400 sBx=24329   ; B=K47:"Item_IsGrowUp", C=K8:0.0
+  0000959: SETTABLE   A=2   B=304 C=264 Bx=155912 sBx=24841   ; B=K48:"Item_needshengwangpoint", C=K8:0.0
+  0000960: SETTABLE   A=2   B=305 C=387 Bx=156547 sBx=25476   ; B=K49:"name", C=K131:"装备升级"
+  0000961: SETTABLE   A=2   B=307 C=267 Bx=157451 sBx=26380   ; B=K51:"Item_lable_G", C=K11:255.0
+  0000962: SETTABLE   A=2   B=308 C=260 Bx=157956 sBx=26885   ; B=K52:"Item_CanGive", C=K4:1.0
+>>0000963: SETTABLE   A=2   B=309 C=264 Bx=158472 sBx=27401   ; B=K53:"vip_advantage", C=K8:0.0
+  0000964: SETTABLE   A=2   B=310 C=264 Bx=158984 sBx=27913   ; B=K54:"Item_isExchange", C=K8:0.0
+  0000965: SETTABLE   A=2   B=311 C=260 Bx=159492 sBx=28421   ; B=K55:"Item_shopamount", C=K4:1.0
+  0000966: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000967: SETTABLE   A=2   B=312 C=3   Bx=159747 sBx=28676   ; B=K56:"Item_BelongHero"
+  0000968: SETTABLE   A=2   B=313 C=264 Bx=160520 sBx=29449   ; B=K57:"Item_eff_num", C=K8:0.0
+  0000969: SETTABLE   A=2   B=314 C=260 Bx=161028 sBx=29957   ; B=K58:"Item_isUpgrade", C=K4:1.0
+  0000970: SETTABLE   A=2   B=315 C=264 Bx=161544 sBx=30473   ; B=K59:"Item_Upgrade_NextItem", C=K8:0.0
+  0000971: SETTABLE   A=2   B=316 C=264 Bx=162056 sBx=30985   ; B=K60:"Can_stack", C=K8:0.0
+  0000972: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0000973: SETTABLE   A=2   B=317 C=3   Bx=162307 sBx=31236   ; B=K61:"Item_magicBookSkill"
+  0000974: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+
+-- around PC 1072
+  0001064: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0001065: SETTABLE   A=2   B=301 C=3   Bx=154115 sBx=23044   ; B=K45:"Item_MissionList"
+  0001066: SETTABLE   A=2   B=302 C=260 Bx=154884 sBx=23813   ; B=K46:"Item_CanDrop", C=K4:1.0
+  0001067: SETTABLE   A=2   B=303 C=264 Bx=155400 sBx=24329   ; B=K47:"Item_IsGrowUp", C=K8:0.0
+  0001068: SETTABLE   A=2   B=304 C=264 Bx=155912 sBx=24841   ; B=K48:"Item_needshengwangpoint", C=K8:0.0
+  0001069: SETTABLE   A=2   B=305 C=395 Bx=156555 sBx=25484   ; B=K49:"name", C=K139:"测试装备"
+  0001070: SETTABLE   A=2   B=307 C=267 Bx=157451 sBx=26380   ; B=K51:"Item_lable_G", C=K11:255.0
+  0001071: SETTABLE   A=2   B=308 C=260 Bx=157956 sBx=26885   ; B=K52:"Item_CanGive", C=K4:1.0
+>>0001072: SETTABLE   A=2   B=309 C=264 Bx=158472 sBx=27401   ; B=K53:"vip_advantage", C=K8:0.0
+  0001073: SETTABLE   A=2   B=310 C=264 Bx=158984 sBx=27913   ; B=K54:"Item_isExchange", C=K8:0.0
+  0001074: SETTABLE   A=2   B=311 C=260 Bx=159492 sBx=28421   ; B=K55:"Item_shopamount", C=K4:1.0
+  0001075: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0001076: SETTABLE   A=2   B=312 C=3   Bx=159747 sBx=28676   ; B=K56:"Item_BelongHero"
+  0001077: SETTABLE   A=2   B=313 C=264 Bx=160520 sBx=29449   ; B=K57:"Item_eff_num", C=K8:0.0
+  0001078: SETTABLE   A=2   B=314 C=264 Bx=161032 sBx=29961   ; B=K58:"Item_isUpgrade", C=K8:0.0
+  0001079: SETTABLE   A=2   B=315 C=264 Bx=161544 sBx=30473   ; B=K59:"Item_Upgrade_NextItem", C=K8:0.0
+  0001080: SETTABLE   A=2   B=316 C=264 Bx=162056 sBx=30985   ; B=K60:"Can_stack", C=K8:0.0
+  0001081: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+  0001082: SETTABLE   A=2   B=317 C=3   Bx=162307 sBx=31236   ; B=K61:"Item_magicBookSkill"
+  0001083: NEWTABLE   A=3   B=0   C=0   Bx=0      sBx=-131071
+
+====================================================================================================
+proto=7 path=0.6 depth=1 const=1875 value=增加2点基础射程\n(赞助大使才能购买)
+line_defined=0 last_line=0 code=109759 consts=2258 children=0
+PC references: [(93117, ['Bx'])]
+
+-- around PC 93117
+  0093109: NEWTABLE   A=4   B=1   C=0   Bx=512    sBx=-130559
+  0093110: LOADK      A=5   B=0   C=8   Bx=8      sBx=-131063 ; K8:0.0
+  0093111: SETLIST    A=4   B=1   C=1   Bx=513    sBx=-130558
+  0093112: SETTABLE   A=3   B=328 C=4   Bx=167940 sBx=36869   ; B=K72:"Item_Carry_Effect"
+  0093113: LOADK      A=4   B=0   C=8   Bx=8      sBx=-131063 ; K8:0.0
+  0093114: SETTABLE   A=3   B=329 C=4   Bx=168452 sBx=37381   ; B=K73:"Item_StackCount"
+  0093115: LOADK      A=4   B=0   C=8   Bx=8      sBx=-131063 ; K8:0.0
+  0093116: SETTABLE   A=3   B=330 C=4   Bx=168964 sBx=37893   ; B=K74:"Item_GrowUpMaxLv"
+>>0093117: LOADK      A=4   B=3   C=339 Bx=1875   sBx=-129196 ; K1875:"增加2点基础射程\n(赞助大使才能购买)"
+  0093118: SETTABLE   A=3   B=331 C=4   Bx=169476 sBx=38405   ; B=K75:"Item_hint"
+  0093119: NEWTABLE   A=4   B=0   C=0   Bx=0      sBx=-131071
+  0093120: SETTABLE   A=3   B=333 C=4   Bx=170500 sBx=39429   ; B=K77:"Item_GlobalFunc"
+  0093121: LOADK      A=4   B=0   C=8   Bx=8      sBx=-131063 ; K8:0.0
+  0093122: SETTABLE   A=3   B=334 C=4   Bx=171012 sBx=39941   ; B=K78:"Item_endtime"
+  0093123: LOADK      A=4   B=0   C=80  Bx=80     sBx=-130991 ; K80:-1.0
+  0093124: SETTABLE   A=3   B=335 C=4   Bx=171524 sBx=40453   ; B=K79:"Item_discount"
+  0093125: LOADK      A=4   B=0   C=8   Bx=8      sBx=-131063 ; K8:0.0
+  0093126: SETTABLE   A=3   B=337 C=4   Bx=172548 sBx=41477   ; B=K81:"Item_Upgrade_eff"
+  0093127: LOADK      A=4   B=0   C=8   Bx=8      sBx=-131063 ; K8:0.0
+  0093128: SETTABLE   A=3   B=338 C=4   Bx=173060 sBx=41989   ; B=K82:"Item_GlobalFunc_eff"
+
+====================================================================================================
+proto=11 path=0.10 depth=1 const=187 value=会员功能面板
+line_defined=0 last_line=0 code=504 consts=191 children=0
+PC references: [(491, ['C/RK'])]
+
+-- around PC 491
+  0000483: SETTABLE   A=2   B=264 C=440 Bx=135608 sBx=4537    ; B=K8:"name", C=K184:"升造图标"
+  0000484: SETTABLE   A=2   B=266 C=288 Bx=136480 sBx=5409    ; B=K10:"Interfacetype_type", C=K32:9.0
+  0000485: SETTABLE   A=1   B=261 C=2   Bx=133634 sBx=2563    ; B=K5:"basic"
+  0000486: SETTABLE   A=0   B=438 C=1   Bx=224257 sBx=93186   ; B=K182:62.0
+  0000487: GETGLOBAL  A=0   B=0   C=0   Bx=0      sBx=-131071 ; K0:"tab_interface"
+  0000488: NEWTABLE   A=1   B=0   C=1   Bx=1      sBx=-131070
+  0000489: NEWTABLE   A=2   B=0   C=3   Bx=3      sBx=-131068
+  0000490: SETTABLE   A=2   B=262 C=442 Bx=134586 sBx=3515    ; B=K6:"icon_path", C=K186:"sanguo/ui/ValuableShop_Transparent.tga"
+>>0000491: SETTABLE   A=2   B=264 C=443 Bx=135611 sBx=4540    ; B=K8:"name", C=K187:"会员功能面板"
+  0000492: SETTABLE   A=2   B=266 C=260 Bx=136452 sBx=5381    ; B=K10:"Interfacetype_type", C=K4:1.0
+  0000493: SETTABLE   A=1   B=261 C=2   Bx=133634 sBx=2563    ; B=K5:"basic"
+  0000494: SETTABLE   A=0   B=441 C=1   Bx=225793 sBx=94722   ; B=K185:63.0
+  0000495: GETGLOBAL  A=0   B=0   C=0   Bx=0      sBx=-131071 ; K0:"tab_interface"
+  0000496: NEWTABLE   A=1   B=0   C=1   Bx=1      sBx=-131070
+  0000497: NEWTABLE   A=2   B=0   C=3   Bx=3      sBx=-131068
+  0000498: SETTABLE   A=2   B=262 C=445 Bx=134589 sBx=3518    ; B=K6:"icon_path", C=K189:"sanguo/ui/lock.tga"
+  0000499: SETTABLE   A=2   B=264 C=446 Bx=135614 sBx=4543    ; B=K8:"name", C=K190:"隐藏属性面板锁定按钮"
+  0000500: SETTABLE   A=2   B=266 C=260 Bx=136452 sBx=5381    ; B=K10:"Interfacetype_type", C=K4:1.0
+  0000501: SETTABLE   A=1   B=261 C=2   Bx=133634 sBx=2563    ; B=K5:"basic"
+  0000502: SETTABLE   A=0   B=444 C=1   Bx=227329 sBx=96258   ; B=K188:64.0
+
+====================================================================================================
+proto=1235 path=0.33.1183 depth=2 const=29 value=赞助专属装备：\n1：携带【龙纹镜】击杀【羡羡兽】可获得〖天空之镜〗\n2：携带【落日弓】击杀【呆呆象】可获得〖幻月〗\n3：携带【青锋剑】击杀【背背熊】可获得〖凌风〗
+line_defined=50831 last_line=50890 code=391 consts=32 children=0
+PC references: [(381, ['Bx'])]
+
+-- around PC 381
+  0000373: LOADK      A=4   B=0   C=27  Bx=27     sBx=-131044 ; K27:327.0
+  0000374: LOADK      A=5   B=0   C=5   Bx=5      sBx=-131066 ; K5:1.0
+  0000375: GETGLOBAL  A=6   B=0   C=3   Bx=3      sBx=-131068 ; K3:"tgr_KEobj"
+  0000376: GETTABLE   A=6   B=6   C=263 Bx=3335   sBx=-127736 ; C=K7:"c"
+  0000377: LOADK      A=7   B=0   C=0   Bx=0      sBx=-131071 ; K0:0.0
+  0000378: CALL       A=3   B=5   C=1   Bx=2561   sBx=-128510
+  0000379: JMP        A=0   B=255 C=511 Bx=131071 sBx=0       ; -> 380
+  0000380: GETGLOBAL  A=3   B=0   C=28  Bx=28     sBx=-131043 ; K28:"TriggerShowHint"
+>>0000381: LOADK      A=4   B=0   C=29  Bx=29     sBx=-131042 ; K29:"赞助专属装备：\n1：携带【龙纹镜】击杀【羡羡兽】可获得〖天空之镜〗\n2：携带【落日弓】击杀【呆呆象】可获得〖幻月〗\n3：携带【青锋剑】击杀【背背熊】可获得〖凌风〗"
+  0000382: LOADK      A=5   B=0   C=5   Bx=5      sBx=-131066 ; K5:1.0
+  0000383: LOADK      A=6   B=0   C=5   Bx=5      sBx=-131066 ; K5:1.0
+  0000384: LOADK      A=7   B=0   C=30  Bx=30     sBx=-131041 ; K30:255.0
+  0000385: LOADK      A=8   B=0   C=30  Bx=30     sBx=-131041 ; K30:255.0
+  0000386: LOADK      A=9   B=0   C=30  Bx=30     sBx=-131041 ; K30:255.0
+  0000387: LOADK      A=10  B=0   C=30  Bx=30     sBx=-131041 ; K30:255.0
+  0000388: GETGLOBAL  A=11  B=0   C=31  Bx=31     sBx=-131040 ; K31:"tgr_cha"
+  0000389: CALL       A=3   B=9   C=1   Bx=4609   sBx=-126462
+  0000390: RETURN     A=0   B=1   C=0   Bx=512    sBx=-130559
+
+====================================================================================================
+proto=1263 path=0.33.1211 depth=2 const=20 value=提醒：只有赞助大使才能购买射程！
+line_defined=51835 last_line=51874 code=77 consts=22 children=0
+PC references: [(67, ['Bx'])]
+
+-- around PC 67
+  0000059: GETGLOBAL  A=4   B=0   C=17  Bx=17     sBx=-131054 ; K17:"TriggerAddUnitAttr"
+  0000060: GETGLOBAL  A=5   B=0   C=16  Bx=16     sBx=-131055 ; K16:"tgr_cha"
+  0000061: LOADK      A=6   B=0   C=18  Bx=18     sBx=-131053 ; K18:13.0
+  0000062: LOADK      A=7   B=0   C=6   Bx=6      sBx=-131065 ; K6:2.0
+  0000063: LOADK      A=8   B=0   C=7   Bx=7      sBx=-131064 ; K7:1.0
+  0000064: CALL       A=4   B=5   C=1   Bx=2561   sBx=-128510
+  0000065: JMP        A=0   B=256 C=9   Bx=131081 sBx=10      ; -> 76
+  0000066: GETGLOBAL  A=1   B=0   C=19  Bx=19     sBx=-131052 ; K19:"TriggerShowHint"
+>>0000067: LOADK      A=2   B=0   C=20  Bx=20     sBx=-131051 ; K20:"提醒：只有赞助大使才能购买射程！"
+  0000068: LOADK      A=3   B=0   C=7   Bx=7      sBx=-131064 ; K7:1.0
+  0000069: LOADK      A=4   B=0   C=7   Bx=7      sBx=-131064 ; K7:1.0
+  0000070: LOADK      A=5   B=0   C=21  Bx=21     sBx=-131050 ; K21:255.0
+  0000071: LOADK      A=6   B=0   C=21  Bx=21     sBx=-131050 ; K21:255.0
+  0000072: LOADK      A=7   B=0   C=21  Bx=21     sBx=-131050 ; K21:255.0
+  0000073: LOADK      A=8   B=0   C=21  Bx=21     sBx=-131050 ; K21:255.0
+  0000074: GETGLOBAL  A=9   B=0   C=16  Bx=16     sBx=-131055 ; K16:"tgr_cha"
+  0000075: CALL       A=1   B=9   C=1   Bx=4609   sBx=-126462
+  0000076: RETURN     A=0   B=1   C=0   Bx=512    sBx=-130559
+
+====================================================================================================
+proto=1339 path=0.33.1287 depth=2 const=1 value=-----------------------\n【赞助大使特权】\n1：可以选赞助专属英雄\n2：可以用木头购买射程属性\n3：英雄死亡不掉战神等级
+line_defined=54261 last_line=54265 code=11 consts=6 children=0
+PC references: [(1, ['Bx'])]
+
+-- around PC 1
+  0000000: GETGLOBAL  A=0   B=0   C=0   Bx=0      sBx=-131071 ; K0:"TriggerShowHint"
+>>0000001: LOADK      A=1   B=0   C=1   Bx=1      sBx=-131070 ; K1:"-----------------------\n【赞助大使特权】\n1：可以选赞助专属英雄\n2：可以用木头购买射程属性\n3：英雄死亡不掉战神等级"
+  0000002: LOADK      A=2   B=0   C=2   Bx=2      sBx=-131069 ; K2:1.0
+  0000003: LOADK      A=3   B=0   C=2   Bx=2      sBx=-131069 ; K2:1.0
+  0000004: LOADK      A=4   B=0   C=3   Bx=3      sBx=-131068 ; K3:255.0
+  0000005: LOADK      A=5   B=0   C=3   Bx=3      sBx=-131068 ; K3:255.0
+  0000006: LOADK      A=6   B=0   C=4   Bx=4      sBx=-131067 ; K4:0.0
+  0000007: LOADK      A=7   B=0   C=3   Bx=3      sBx=-131068 ; K3:255.0
+  0000008: GETGLOBAL  A=8   B=0   C=5   Bx=5      sBx=-131066 ; K5:"tgr_cha"
+  0000009: CALL       A=0   B=9   C=1   Bx=4609   sBx=-126462
+  0000010: RETURN     A=0   B=1   C=0   Bx=512    sBx=-130559
+

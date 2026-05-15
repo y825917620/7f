@@ -1,0 +1,11 @@
+{
+  "input": "/mnt/data/10002_payload_decrypted_lua51.o",
+  "size": 21186616,
+  "header_hex": "1b4c75615100010404040800",
+  "root_proto_id": 0,
+  "parse_end": 21186614,
+  "trailing_bytes": 2,
+  "proto_count": 1340,
+  "string_constant_count": 16077,
+  "number_constant_count": 23993
+}
