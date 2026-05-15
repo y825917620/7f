@@ -578,7 +578,7 @@ class LauncherWindow(QMainWindow):
         QMessageBox.information(self, "config.lua 预览", f"<pre>{lua}</pre>")
 
     def _launch_game(self):
-        """启动游戏 — 匹配原版 exe 行为：只编译 map.o + CreateProcess."""
+        """启动游戏 — 极简：不写文件，只 SHM + CreateProcess."""
         if self.selected_map is None:
             QMessageBox.warning(self, "提示", "请先选择一张地图")
             return
@@ -596,46 +596,19 @@ class LauncherWindow(QMainWindow):
         options = self._get_current_options()
 
         try:
-            resource_service = ResourceControlService(game_dir)
-            manifest = resource_service.prepare_launch_manifest(
-                map_id=map_id,
-                options=options,
-                resolution_index=self.resolution_combo.currentIndex(),
-            )
-            if not manifest.is_valid():
-                self._show_diag(
-                    "资源准备失败",
-                    "\n".join(manifest.errors) or "地图资源未能生成有效启动清单",
-                    QMessageBox.Icon.Critical,
-                )
+            bridge = GameBridge(game_dir, map_id, options,
+                              self.resolution_combo.currentIndex())
+            bridge.prepare()
+            ok, err = bridge.launch()
+            if not ok:
+                self._show_diag("启动失败", err, QMessageBox.Icon.Critical)
                 return
-
-            manifest_summary = (
-                f"地图ID: {manifest.map_id}\n"
-                f"挂载策略: {manifest.strategy}\n"
-                f"源SL: {manifest.sl_path}\n"
-                f"解包缓存: {manifest.unpacked_path}\n"
-                "挂载点:\n" + "\n".join(f"  - {p}" for p in manifest.mount_points)
-            )
-
-            bridge, diag_msg = launch_game(manifest)
-
-            if bridge is None:
-                self._show_diag("启动失败", manifest_summary + "\n\n" + diag_msg, QMessageBox.Icon.Critical)
-                return
-
-            self._last_launch_pid = bridge.process_id
-            self._game_process_handle = bridge.process_handle
 
             info = MAP_INFO.get(self.selected_map, {})
             map_name = info.get("name", str(map_id))
             self.statusbar.showMessage(
                 f"游戏已启动: {map_name} ({map_id}) | PID={bridge.process_id}"
             )
-
-            if diag_msg:
-                self._show_diag(f"启动诊断 — {map_name} ({map_id})", manifest_summary + "\n\n" + diag_msg,
-                               QMessageBox.Icon.Information)
 
         except Exception as e:
             import traceback
