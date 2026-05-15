@@ -49,5 +49,14 @@ args = [
     "--hidden-import", "PyQt6.QtWidgets",
 ]
 
+import shutil
+
 print("Building with args:", args)
 PyInstaller.__main__.run(args)
+
+# 自动部署到 data 目录
+dist_exe = project_root / "dist" / "神龙地图启动器.exe"
+data_exe = project_root / "data" / "神龙地图启动器.exe"
+if dist_exe.exists():
+    shutil.copy2(dist_exe, data_exe)
+    print(f"已部署到: {data_exe}")
