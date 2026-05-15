@@ -129,15 +129,12 @@ class GameBridge:
     不允许自行解压资源 — 资源准备由 ResourceMountManager 完成。
     """
 
-    def __init__(self, manifest: MapLaunchManifest):
-        if not manifest.is_valid():
-            raise ValueError(f"Manifest 无效: {'; '.join(manifest.errors)}")
-
-        self.manifest = manifest
-        self.game_dir = Path(manifest.game_dir)
-        self.map_id = int(manifest.map_id)
-        self.options = list(manifest.options) if manifest.options else [-1] * 10 + [0]
-        self.resolution_index = manifest.resolution_index
+    def __init__(self, game_dir: Path, map_id: int, options: list,
+                 resolution_index: int = 0):
+        self.game_dir = Path(game_dir)
+        self.map_id = int(map_id)
+        self.options = list(options) if options else [-1] * 10 + [0]
+        self.resolution_index = resolution_index
         self._handles = {}
         self._process_info = None
         self._prepare_errors = []
