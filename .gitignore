@@ -1,0 +1,47 @@
+# === Game resources & map data (large files) ===
+/data/
+/data_test/
+/game/
+
+# === Build artifacts & distribution ===
+/dist/
+/build/
+/cache/
+__pycache__/
+*.pyc
+*.pyo
+
+# === Packaged executables ===
+*.exe
+
+# === Extracted/reverse-engineered content ===
+/神龙地图启动器.exe_extracted/
+/extracted_launcher/
+/pycdc/
+/lua51_bin/
+/pyz_extracted.pyz
+/luac.out
+
+# === Logs and temp files ===
+/launcher_logs/
+*.log
+E:tmp_orig_edt2.lst
+
+# === Debug/temp analysis files ===
+/file_list.txt
+/pyc_strings.txt
+/pyc_strings_utf8.txt
+/orig_head.txt
+/new_head.txt
+/orig_edt2.o
+/orig_config.lua
+/launcher_refactoring_plan.html
+*tmp_orig_edt2*
+
+# === IDE & OS ===
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+desktop.ini
