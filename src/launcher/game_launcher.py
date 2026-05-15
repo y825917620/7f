@@ -214,7 +214,8 @@ class GameBridge:
         return ""
 
     def _build_cmdline(self, game_path: Path) -> str:
-        return f'"{game_path}" {self.map_id}'
+        # 原版 C++ 命令行格式: "game.exe" MemoryMapName=sanguo
+        return f'"{game_path}" {self.map_id} MemoryMapName=sanguo'
 
     def _create_live_map_mapping(self, kernel32) -> Optional[str]:
         map_file = self.manifest.mount_points[0] if self.manifest.mount_points else self.manifest.unpacked_path
@@ -352,8 +353,10 @@ class GameBridge:
         if h_nul == wintypes.HANDLE(-1).value:
             h_nul = None
 
-        # 3. sanguo 内存映射仅用于服务器多人会话，本地单机不需要
-        # self._create_live_map_mapping(kernel32)
+        # 3. sanguo 内存映射 (地图运行态数据)
+        map_err = self._create_live_map_mapping(kernel32)
+        if map_err:
+            return False, f"创建内存映射失败:\n{map_err}"
 
         # 4. 设置 STARTUPINFO
         class STARTUPINFOA(ctypes.Structure):
