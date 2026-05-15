@@ -201,9 +201,19 @@ class GameBridge:
     def _process_safe_timestamp() -> str:
         return datetime.now().strftime("%Y%m%d_%H%M%S")
 
+    def _get_map_name(self) -> str:
+        """从 .map 文件读取地图中文名."""
+        try:
+            from ..core.map_parser import MapOptionParser
+            map_path = self.game_dir / "map" / f"{self.map_id}.map"
+            parsed = MapOptionParser.parse(map_path)
+            if parsed and parsed.get("chn_name"):
+                return parsed["chn_name"]
+        except Exception:
+            pass
+        return ""
+
     def _build_cmdline(self, game_path: Path) -> str:
-        # 原版 C++ 默认命令行，不加编辑器/直播参数
-        # 地图资源由 .sl 文件加载，sanguo SHM 仅用于服务器会话
         return f'"{game_path}" {self.map_id}'
 
     def _create_live_map_mapping(self, kernel32) -> Optional[str]:
@@ -291,18 +301,35 @@ class GameBridge:
 
         # 1. 启动信息共享内存 7fgame_game_client_start_info (512 bytes, offset0 = map_id)
         kernel32.CreateFileMappingA.restype = wintypes.HANDLE
+        kernel32.MapViewOfFile.restype = ctypes.c_void_p
+        kernel32.UnmapViewOfFile.argtypes = [ctypes.c_void_p]
+        kernel32.UnmapViewOfFile.restype = wintypes.BOOL
+
         h_start_info = kernel32.CreateFileMappingA(
             wintypes.HANDLE(-1), None, 0x04, 0, 512, b"7fgame_game_client_start_info"
         )
         if h_start_info:
-            kernel32.MapViewOfFile.restype = ctypes.c_void_p
             ptr_si = kernel32.MapViewOfFile(h_start_info, 0xF001F, 0, 0, 512)
             if ptr_si:
-                buf = (ctypes.c_uint32 * 1)(self.map_id)
-                ctypes.memmove(ptr_si, buf, ctypes.sizeof(buf))
-                kernel32.UnmapViewOfFile.argtypes = [ctypes.c_void_p]
+                ctypes.memset(ptr_si, 0, 512)
+                ctypes.c_uint32.from_address(ptr_si).value = self.map_id
+                # 写入地图名称到 SHM 偏移 0x10 (供游戏窗口标题使用)
+                map_name_bytes = self._get_map_name().encode("gbk")[:32]
+                ctypes.memmove(ptr_si + 0x10, map_name_bytes, len(map_name_bytes))
                 kernel32.UnmapViewOfFile(ptr_si)
             self._handles["start_info"] = h_start_info
+
+        # 1b. 登录共享内存 7fgame_game_client_login (4 bytes — 原版 C++ 精确大小)
+        # 设为 1 表示本地/已登录模式，避免游戏进入网络重连
+        h_login = kernel32.CreateFileMappingA(
+            wintypes.HANDLE(-1), None, 0x04, 0, 4, b"7fgame_game_client_login"
+        )
+        if h_login:
+            ptr_li = kernel32.MapViewOfFile(h_login, 0xF001F, 0, 0, 4)
+            if ptr_li:
+                ctypes.c_uint32.from_address(ptr_li).value = 1
+                kernel32.UnmapViewOfFile(ptr_li)
+            self._handles["login"] = h_login
 
         # 2. 匿名管道 + NUL 重定向
         class SECURITY_ATTRIBUTES(ctypes.Structure):
