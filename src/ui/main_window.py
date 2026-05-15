@@ -579,7 +579,7 @@ class LauncherWindow(QMainWindow):
         QMessageBox.information(self, "config.lua 预览", f"<pre>{lua}</pre>")
 
     def _launch_game(self):
-        """启动游戏 — 通过 manifest 驱动完整链路."""
+        """启动游戏 — manifest 驱动，游戏引擎自行加载 .sl 资源."""
         if self.selected_map is None:
             QMessageBox.warning(self, "提示", "请先选择一张地图")
             return
@@ -603,27 +603,31 @@ class LauncherWindow(QMainWindow):
             QMessageBox.critical(self, "启动错误", diag)
             return
 
-        # 2. 资源准备（解包 + 挂载）
+        # 2. 资源验证（游戏自行从 map/{id}.sl 加载，启动器不做文件挂载）
         mount_mgr = ResourceMountManager(abs_game_dir)
         manifest = mount_mgr.prepare(map_id, info["sl_path"])
         if not manifest.is_valid():
-            err_msg = "\n".join(manifest.errors) if manifest.errors else "地图资源准备失败"
+            err_msg = "\n".join(manifest.errors) if manifest.errors else "地图资源验证失败"
             QMessageBox.critical(self, "启动错误", err_msg)
             return
 
-        # 3. 保存 manifest 用于诊断
+        # 3. 确保 map/sanguo/ 目录存在（游戏将在此写入解包后的 sanguo.o）
+        sanguo_dir = abs_game_dir / "map" / "sanguo"
+        sanguo_dir.mkdir(parents=True, exist_ok=True)
+
+        # 4. 保存 manifest 用于诊断
         manifest_dir = abs_game_dir.parent / "launcher_logs"
         manifest_dir.mkdir(parents=True, exist_ok=True)
         manifest_path = manifest_dir / f"manifest_{map_id}_{int(time.time())}.json"
         manifest.save(manifest_path)
 
-        # 4. 启动游戏
+        # 5. 启动游戏
         bridge = launch_game(manifest)
         if bridge is None:
             QMessageBox.critical(self, "启动错误", "CreateProcess 失败，请检查游戏文件完整性")
             return
 
-        # 5. 保存启动上下文
+        # 6. 保存启动上下文
         self._last_launch_manifest = manifest
         self._last_launch_pid = bridge.process_id
         self._game_process_handle = bridge.process_handle

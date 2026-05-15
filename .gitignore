@@ -43,3 +43,4 @@ E:tmp_orig_edt2.lst
 *.swo
 Thumbs.db
 desktop.ini
+data_test*/
