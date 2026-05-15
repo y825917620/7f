@@ -74,12 +74,20 @@ game.exe 通过 `MemoryMapName=sanguo` 读取内存映射中的地图包数据�
 
 ---
 
+## 策略验证记录
+
+| 策略 | 证据 | 结果 | 决策 |
+|------|------|------|------|
+| file_dual_mount | sl/map.map + core/sl/map.map 双写；10002/10005 日志审查 | 10002: ui_init_failed (tab_interface nil) 阻止地图加载；10005: 同上 (ui_init_failed) | 保留为默认策略；ui_init_failed 是终端启动限制非挂载问题；GUI 环境下重新评估 |
+| /mapfile= | game.exe 中可见字符串 | 未实验 (ui_init_failed 阻止所有地图加载) | 待 GUI 环境 |
+| MemoryMapName= | gpigame.dll 中可见字符串 | 未实验 | 待 GUI 环境 |
+
 ## 决策树
 
 ```
 地图资源接入
-├── 默认策略：文件挂载到 sl/map.map + core/sl/map.map
+├── 默认策略：file_dual_mount (sl/map.map + core/sl/map.map)
 ├── 若 /mapfile= 证实有效 → 优先使用，减少文件覆盖
 ├── 若 MemoryMapName= 证实有效 → 作为第二选项
-└── 回退策略：保留文件挂载作为 always-works 方案
+└── 回退策略：保留 file_dual_mount 作为 always-works 方案
 ```

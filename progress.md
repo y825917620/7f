@@ -37,4 +37,10 @@
 
 ## 代码层面全部完成
 - 7/8 阶段已实现
-- 阶段8（资源编辑）和运行验证（AC1/AC7/AC9/AC10）需实际运行游戏
+## Task 10-11: tab_interface nil 实验 + 挂载验证 ✅
+- 5 轮实验全部 ui_init_failed
+- 确认与启动参数、资源挂载、管道句柄无关
+- 根因: game.exe C++ UI 需要 GUI 父进程消息泵
+- file_dual_mount 双挂载点确认存在且内容正确
+- 更新 docs/game_launch_contract.md + map_mounting_decisions.md
+- 17 tests passing, 10-map dry run OK

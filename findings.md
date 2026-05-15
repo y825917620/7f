@@ -48,6 +48,18 @@
 - `config.lua` 包含 `tempConfigLuaMapOptionInfo` 和 `SetCurrentControlID(1)`
 - `edt2.o` 包含 helper_get004/005 等辅助函数
 
+## tab_interface nil 实验矩阵 (2026-05-15)
+
+| 实验 | 变量 | 结果 |
+|------|------|------|
+| 1 | 默认 (NUL + 管道 + SHM) | ui_init_failed |
+| 2 | 重复验证 | ui_init_failed |
+| 3 | 地图 10005 | ui_init_failed |
+| 4 | CREATE_SUSPENDED + ResumeThread | ui_init_failed |
+| 5 | CONOUT$ 替代 NUL | ui_init_failed |
+
+全部实验: manifest 有效，双挂载点正确，但 game_init.lua:104 tab_interface nil 阻止继续。
+
 ## 已验证结论
 
 1. ✅ `.sl` 文件 LZMA 解压 — 全地图通用算法
@@ -56,7 +68,7 @@
 4. ✅ 启动器需动态编译 map.o + edt2.o（Lua 字节码）
 5. ✅ `MemoryMapName=sanguo` 不是默认加载路径
 6. ✅ 启动器完整流程: config.lua → edt2.o → map.o → GameSetting.inf → sl/map.map → SHM + 管道 + CreateProcess
-7. ✅ `tab_interface nil` 仅发生在终端启动 — GUI 启动正常
+7. ✅ `tab_interface nil` — 5 轮实验证实与启动参数、资源挂载、管道无关，是终端/GUI 父进程上下文问题
 
 ## 原启动器完整启动流程 (反汇编证实)
 

@@ -85,5 +85,27 @@ hNul = CreateFileA("NUL", GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
 | 问题 | 根因 | 对策 |
 |------|------|------|
 | 1 秒闪退 | GUI 无控制台，stdout 无效句柄导致 C++ 日志崩溃 | NUL 重定向 |
-| tab_interface nil | 游戏进入地图加载失败路径时 UI 未初始化 | 正确挂载地图资源包 |
+| tab_interface nil | 游戏 C++ UI 系统需要 GUI 父进程上下文（消息泵） | 打包为 PyInstaller GUI exe 运行 |
 | sl/ 目录副作用 | 原启动器不创建 sl/，旧代码创建导致冲突 | 删除旧 sl/，仅复制核心地图包 |
+
+## 7. tab_interface nil 实验记录 (2026-05-15)
+
+5 轮启动上下文实验，全部在终端环境下失败：
+
+| 实验 | 参数变化 | 结果 |
+|------|----------|------|
+| 1 | 默认 (NUL重定向 + 管道 + SHM) | ui_init_failed |
+| 2 | 同上，重复验证 | ui_init_failed |
+| 3 | 地图 10005 (非10002) | ui_init_failed |
+| 4 | CREATE_SUSPENDED + ResumeThread | ui_init_failed |
+| 5 | CONOUT$ 替换 NUL | ui_init_failed |
+
+在全部实验中：
+- Manifest 有效，双挂载点存在且内容正确
+- 日志均到达 `设置读取地图名[sanguo]`
+- error.log 中均有 `scripts\game_init.lua:104: attempt to index global 'tab_interface' (a nil value)`
+- 游戏进程在 UI 初始化失败后无法继续加载地图
+
+结论：`tab_interface nil` 与启动参数、资源挂载、管道/NUL 无关。
+game.exe 的 C++ UI 系统 (`tab_interface`) 需要从 GUI 父进程继承窗口消息泵。
+终端/控制台进程无法提供此上下文。解决方案：PyInstaller 打包为 Windows GUI 应用。
