@@ -47,32 +47,17 @@ def update_game_setting(game_dir, resolution_index):
     try:
         setting_path = Path(game_dir) / "GameSetting.inf"
         # 默认模板必须与原启动器完全一致（第1行=1，第21行=1）
-        # 默认模板 — 值来自原启动器工作目录的 GameSetting.inf
-        # helper_get004: 前4行, helper_get005: 第5-14行
-        # 对应原版 edt2.o 字节码中的 {25424630, 13886613, 13878151, 9983}
-        default_lines = [
-            "25424630", "13886613", "13878151", "9983",
-            "42", "0", "43", "10", "3",
-            "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "1"
-        ]
-        lines = default_lines[:]
-        if setting_path.exists():
-            with open(setting_path, "r", encoding="gbk") as f:
-                existing = f.read().strip().splitlines()
-            for i, val in enumerate(existing):
-                if i < len(lines):
-                    lines[i] = val
-
-        # 暂时保留分辨率设置逻辑，但第1行和第21行保持原值
-        # TODO: 分辨率控制需要进一步研究原启动器机制
-        if 0 <= resolution_index < len(RESOLUTION_OPTIONS):
-            _, display_quality, screen_full = RESOLUTION_OPTIONS[resolution_index]
-            # 不覆盖第1行（必须是1），第21行保持原值
-            pass
-
-        content = "\n".join(lines) + "\n"
-        with open(setting_path, "w", encoding="gbk") as f:
-            f.write(content)
+        # 关键：不覆盖 GameSetting.inf 的前 14 行
+        # 这些值由原版 edt2.o 中的编译常量决定，不应修改
+        # 只在文件不存在时创建默认文件
+        if not setting_path.exists():
+            default_lines = [
+                "1", "0", "1", "1", "42", "0", "43", "10", "3",
+                "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "1"
+            ]
+            content = "\r\n".join(default_lines) + "\r\n"
+            with open(setting_path, "w", encoding="gbk") as f:
+                f.write(content)
 
         # 原启动器不写 core/GameSetting.inf
     except Exception:
