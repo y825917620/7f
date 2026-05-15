@@ -47,8 +47,12 @@ def update_game_setting(game_dir, resolution_index):
     try:
         setting_path = Path(game_dir) / "GameSetting.inf"
         # 默认模板必须与原启动器完全一致（第1行=1，第21行=1）
+        # 默认模板 — 值来自原启动器工作目录的 GameSetting.inf
+        # helper_get004: 前4行, helper_get005: 第5-14行
+        # 对应原版 edt2.o 字节码中的 {25424630, 13886613, 13878151, 9983}
         default_lines = [
-            "1", "0", "1", "1", "42", "0", "43", "10", "3",
+            "25424630", "13886613", "13878151", "9983",
+            "42", "0", "43", "10", "3",
             "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "1"
         ]
         lines = default_lines[:]

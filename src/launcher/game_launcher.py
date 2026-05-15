@@ -58,13 +58,17 @@ def _compile_edt2(config_lua: str, output_path: Path, luac_path: Path) -> bool:
 
 def _compile_map_o(game_dir: Path, luac_path: Path,
                    current_options: dict, selected_map: int) -> bool:
-    """从当前选项动态编译 map.o."""
+    """从当前选项动态编译 map.o.
+
+    原启动器逻辑: 遍历 DEFAULT_MAP_OPTIONS，用 current_options 覆盖，
+    然后编译为 map.o 字节码。
+    """
     try:
         g_map_display = 0
         g_map_opt = {}
         for offset, values in DEFAULT_MAP_OPTIONS.items():
-            if offset in current_options:
-                g_map_opt[offset] = current_options[offset]
+            if current_options and offset in current_options:
+                g_map_opt[offset] = list(current_options[offset])
             else:
                 g_map_opt[offset] = list(values)
 
@@ -122,7 +126,10 @@ class GameBridge:
         self._process_info = None
 
     def prepare(self) -> bool:
-        """准备所有资源（config, edt2.o, map.o, GameSetting, sl/map.map）."""
+        """准备所有资源（config.lua, map.o, GameSetting.inf, sl/map.map）.
+
+        注意: edt2.o 不重新编译 — 原启动器使用预编译的 edt2.o。
+        """
         game_dir = self.game_dir
 
         # 1. 生成并写入 config.lua
@@ -131,23 +138,18 @@ class GameBridge:
 
         # 2. 找到 lua 编译器
         luac_path = _find_luac(game_dir)
-        if luac_path is None:
-            print("[WARN] 未找到 luac5.1.exe，跳过字节码编译")
 
-        # 3. 编译 edt2.o
+        # 3. 编译 map.o (从当前选项动态生成)
         if luac_path:
-            edt2_lua = generate_edt2_lua(self.map_id, self.options, game_dir=game_dir)
-            _compile_edt2(edt2_lua, game_dir / "core" / "edt2.o", luac_path)
+            map_offset = self.map_id - 10000
+            current_options = {map_offset: self.options} if self.options else {}
+            _compile_map_o(game_dir, luac_path, current_options, self.map_id)
 
-        # 4. 编译 map.o
-        if luac_path:
-            _compile_map_o(game_dir, luac_path, {}, self.map_id)
-
-        # 5. 更新 GameSetting.inf
+        # 4. 更新 GameSetting.inf
         from .game_settings import update_game_setting
         update_game_setting(game_dir, self.resolution_index)
 
-        # 6. 确保 sl/map.map (虚拟文件系统)
+        # 5. 解压 sl/map.map (虚拟文件系统)
         _ensure_sl_map(game_dir, self.map_id)
 
         return True
@@ -163,6 +165,8 @@ class GameBridge:
         # 共享内存: start_info
         kernel32.CreateFileMappingA.restype = wintypes.HANDLE
         kernel32.MapViewOfFile.restype = ctypes.c_void_p
+        kernel32.UnmapViewOfFile.argtypes = [ctypes.c_void_p]
+        kernel32.UnmapViewOfFile.restype = wintypes.BOOL
 
         hStart = kernel32.CreateFileMappingA(
             wintypes.HANDLE(-1), None, 0x04, 0, 512,
