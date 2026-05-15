@@ -3,16 +3,14 @@
 
 import ctypes
 from ctypes import wintypes
-import lzma
 import os
-import struct
 import subprocess
 import time
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from ..core.config_generator import generate_config_lua, generate_map_opt_lua
+from ..core.config_generator import generate_config_lua, generate_edt2_lua, generate_map_opt_lua
 from ..core.map_launch_manifest import MapLaunchManifest
 from ..data.map_data import DEFAULT_MAP_OPTIONS
 
@@ -29,6 +27,43 @@ def _find_luac(game_dir: Path) -> Optional[Path]:
         if c and c.exists():
             return c.resolve()
     return None
+
+
+def _compile_lua(luac_path: Path, output_path: Path, lua_src: str) -> tuple:
+    try:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = output_path.with_suffix(".lua.tmp")
+        tmp_path.write_text(lua_src, encoding="gbk")
+        result = subprocess.run(
+            [str(luac_path), "-s", "-o", str(output_path), str(tmp_path)],
+            capture_output=True, text=True, timeout=10
+        )
+        tmp_path.unlink(missing_ok=True)
+        if result.returncode != 0:
+            return False, result.stderr[:500]
+        return True, ""
+    except Exception as e:
+        return False, str(e)
+
+
+def _write_config_lua(game_dir: Path, map_id: int, options: list) -> tuple:
+    try:
+        lua_src = generate_config_lua(map_id, options, game_dir=game_dir)
+        for target in [game_dir / "config.lua", game_dir / "core" / "config.lua"]:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(lua_src, encoding="gbk")
+        return True, ""
+    except Exception as e:
+        return False, f"写入 config.lua 失败: {e}"
+
+
+def _compile_edt2(game_dir: Path, luac_path: Path, map_id: int, options: list) -> tuple:
+    lua_src = generate_edt2_lua(map_id, options, game_dir=game_dir)
+    for target in [game_dir / "core" / "edt2.o", game_dir / "edt2.o"]:
+        ok, err = _compile_lua(luac_path, target, lua_src)
+        if not ok:
+            return False, f"编译 {target.name} 失败:\n{err}"
+    return True, ""
 
 
 def _compile_map_o(game_dir: Path, luac_path: Path,
@@ -109,8 +144,27 @@ def diagnose_launch(game_dir: Path, pid: int, map_id: int,
         result["summary"] = "游戏进程未能生成日志"
         return result
 
-    # 使用 LogVerifier 验证
-    verification = verifier.verify(expected_map_id=map_id, log_dir=log_dir)
+    # 使用 LogVerifier 验证。日志目录出现不代表初始化完成，继续轮询，
+    # 避免把“还在启动”误判成地图脚本未加载。
+    transient_failures = {
+        None,
+        "map_id_mismatch",
+        "map_script_not_loaded",
+        "not_enough_runtime_frames",
+    }
+    verification = None
+    end_at = time.time() + timeout_seconds
+    while time.time() < end_at:
+        verification = verifier.verify(expected_map_id=map_id, log_dir=log_dir)
+        if verification.get("ok"):
+            break
+        failure_kind = verification.get("failure_kind")
+        if failure_kind not in transient_failures:
+            break
+        time.sleep(1)
+
+    if verification is None:
+        verification = verifier.verify(expected_map_id=map_id, log_dir=log_dir)
     result.update(verification)
 
     if verification.get("ok"):
@@ -129,12 +183,21 @@ class GameBridge:
     不允许自行解压资源 — 资源准备由 ResourceMountManager 完成。
     """
 
-    def __init__(self, game_dir: Path, map_id: int, options: list,
-                 resolution_index: int = 0):
-        self.game_dir = Path(game_dir)
-        self.map_id = int(map_id)
-        self.options = list(options) if options else [-1] * 10 + [0]
-        self.resolution_index = resolution_index
+    def __init__(self, manifest: MapLaunchManifest):
+        if not isinstance(manifest, MapLaunchManifest):
+            raise TypeError("GameBridge 需要 MapLaunchManifest")
+        if not manifest.is_valid():
+            raise ValueError("Manifest 无效: " + "; ".join(manifest.errors or ["资源未准备完成"]))
+
+        missing_mounts = [str(p) for p in manifest.mount_points if not Path(p).exists()]
+        if missing_mounts:
+            raise ValueError("Manifest 无效: 挂载文件不存在: " + "; ".join(missing_mounts))
+
+        self.manifest = manifest
+        self.game_dir = Path(manifest.game_dir)
+        self.map_id = int(manifest.map_id)
+        self.options = list(manifest.options) if manifest.options else [-1] * 10 + [0]
+        self.resolution_index = manifest.resolution_index
         self._handles = {}
         self._process_info = None
         self._prepare_errors = []
@@ -143,11 +206,57 @@ class GameBridge:
     def _process_safe_timestamp() -> str:
         return datetime.now().strftime("%Y%m%d_%H%M%S")
 
+    def _build_cmdline(self, game_path: Path) -> str:
+        # 默认只交给游戏地图 ID。地图包已经由 ResourceMountManager 写入
+        # sl/map.map 与 core/sl/map.map；编辑器参数会触发网络/重连链路。
+        return f'"{game_path}" {self.map_id}'
+
+    def _create_live_map_mapping(self, kernel32) -> Optional[str]:
+        map_file = self.manifest.mount_points[0] if self.manifest.mount_points else self.manifest.unpacked_path
+        if not map_file:
+            return "没有可写入内存映射的地图包"
+
+        try:
+            data = Path(map_file).read_bytes()
+        except Exception as e:
+            return f"读取地图包失败，无法创建内存映射: {e}"
+
+        size = len(data)
+        high = (size >> 32) & 0xFFFFFFFF
+        low = size & 0xFFFFFFFF
+        h_map = kernel32.CreateFileMappingA(
+            wintypes.HANDLE(-1), None, 0x04, high, low, b"sanguo"
+        )
+        if not h_map:
+            return f"创建 MemoryMapName=sanguo 失败，错误码 {kernel32.GetLastError()}"
+
+        ptr = kernel32.MapViewOfFile(h_map, 0xF001F, 0, 0, size)
+        if not ptr:
+            err = kernel32.GetLastError()
+            kernel32.CloseHandle(h_map)
+            return f"写入 MemoryMapName=sanguo 失败，错误码 {err}"
+
+        ctypes.memmove(ptr, data, size)
+        kernel32.UnmapViewOfFile(ptr)
+        self._handles["live_map"] = h_map
+        return None
+
     def prepare(self) -> bool:
         """准备 map.o + 分辨率设置 — 与原版 exe 行为一致."""
         game_dir = self.game_dir
 
+        for mount_point in self.manifest.mount_points:
+            if not Path(mount_point).exists():
+                self._prepare_errors.append(f"地图挂载文件不存在: {mount_point}")
+
+        if self._prepare_errors:
+            return False
+
         # 1. 编译 map.o — 只含当前选中地图的选项
+        ok, err = _write_config_lua(game_dir, self.map_id, self.options)
+        if not ok:
+            self._prepare_errors.append(err)
+
         luac_path = _find_luac(game_dir)
         if luac_path:
             map_offset = self.map_id - 10000
@@ -155,6 +264,11 @@ class GameBridge:
             ok, err = _compile_map_o(game_dir, luac_path, current_options, self.map_id)
             if not ok:
                 self._prepare_errors.append(f"编译 map.o 失败:\n{err}")
+            ok, err = _compile_edt2(game_dir, luac_path, self.map_id, self.options)
+            if not ok:
+                self._prepare_errors.append(err)
+        else:
+            self._prepare_errors.append("未找到 luac5.1.exe，无法编译 edt2.o/map.o")
 
         # 2. 分辨率/窗口模式设置
         try:
@@ -162,6 +276,12 @@ class GameBridge:
             update_game_setting(game_dir, self.resolution_index)
         except Exception as e:
             self._prepare_errors.append(f"分辨率设置失败: {e}")
+
+        try:
+            manifest_path = game_dir / "launcher_logs" / f"launch_{self.map_id}_{self._process_safe_timestamp()}.json"
+            self.manifest.save(manifest_path)
+        except Exception as e:
+            self._prepare_errors.append(f"保存启动清单失败: {e}")
 
         return len(self._prepare_errors) == 0
 
@@ -171,42 +291,6 @@ class GameBridge:
 
         kernel32.CreateMutexA.restype = wintypes.HANDLE
         self._handles["mutex"] = kernel32.CreateMutexA(None, False, b"7fxx_dgtm")
-
-        kernel32.CreateFileMappingA.restype = wintypes.HANDLE
-        kernel32.MapViewOfFile.restype = ctypes.c_void_p
-        kernel32.UnmapViewOfFile.argtypes = [ctypes.c_void_p]
-        kernel32.UnmapViewOfFile.restype = wintypes.BOOL
-
-        # SHM start_info
-        hStart = kernel32.CreateFileMappingA(wintypes.HANDLE(-1), None, 0x04, 0, 512, b"7fgame_game_client_start_info")
-        if hStart:
-            ptr = kernel32.MapViewOfFile(hStart, 0xF001F, 0, 0, 512)
-            if ptr:
-                ctypes.memset(ptr, 0, 512)
-                ctypes.c_uint32.from_address(ptr).value = self.map_id
-                kernel32.UnmapViewOfFile(ptr)
-
-        # SHM login
-        hLogin = kernel32.CreateFileMappingA(wintypes.HANDLE(-1), None, 0x04, 0, 256, b"7fgame_game_client_login")
-        if hLogin:
-            ptr = kernel32.MapViewOfFile(hLogin, 0xF001F, 0, 0, 256)
-            if ptr:
-                ctypes.memset(ptr, 0, 256)
-                buf = (ctypes.c_char * 256).from_address(ptr)
-                buf.value = b"localplayer"
-                kernel32.UnmapViewOfFile(ptr)
-
-        class SECURITY_ATTRIBUTES(ctypes.Structure):
-            _fields_ = [("nLength", wintypes.DWORD), ("lpSecurityDescriptor", wintypes.LPVOID), ("bInheritHandle", wintypes.BOOL)]
-
-        sa = SECURITY_ATTRIBUTES()
-        sa.nLength = ctypes.sizeof(sa)
-        sa.bInheritHandle = True
-
-        hRead = wintypes.HANDLE()
-        hWrite = wintypes.HANDLE()
-        kernel32.CreatePipe(ctypes.byref(hRead), ctypes.byref(hWrite), ctypes.byref(sa), 0)
-        hNul = kernel32.CreateFileA(b"NUL", 0x40000000, 3, None, 3, 0x80, None)
 
         class STARTUPINFOA(ctypes.Structure):
             _fields_ = [
@@ -227,40 +311,26 @@ class GameBridge:
 
         si = STARTUPINFOA()
         si.cb = ctypes.sizeof(si)
-        si.dwFlags = 0x101
+        si.dwFlags = 0x1
         si.wShowWindow = 1
-        si.hStdInput = hRead
-        si.hStdOutput = hNul
-        si.hStdError = hNul
 
         game_path = self.game_dir / "core" / "game.exe"
         if not game_path.exists():
             game_path = self.game_dir / "game.exe"
-        cmdline = f'"{game_path}" {self.map_id}'
+        cmdline = self._build_cmdline(game_path)
         os.environ["PATH"] = str(self.game_dir / "core") + os.pathsep + os.environ.get("PATH", "")
 
         pi = PROCESS_INFORMATION()
         ok = kernel32.CreateProcessA(
             str(game_path).encode("mbcs"), cmdline.encode("mbcs"),
-            None, None, True, 0, None,
+            None, None, False, 0, None,
             str(self.game_dir).encode("mbcs"),
             ctypes.byref(si), ctypes.byref(pi)
         )
 
         if not ok:
             err = kernel32.GetLastError()
-            for h in [hRead, hWrite, hNul]:
-                if h:
-                    kernel32.CloseHandle(h)
             return False, f"CreateProcessA 失败 (错误码: {err})"
-
-        kernel32.CloseHandle(hRead)
-        pipe_data = struct.pack("<4I", pi.dwProcessId, pi.dwThreadId, self.map_id, 0)
-        written = wintypes.DWORD(0)
-        kernel32.WriteFile(hWrite, pipe_data, len(pipe_data), ctypes.byref(written), None)
-        kernel32.CloseHandle(hWrite)
-        if hNul:
-            kernel32.CloseHandle(hNul)
 
         self._process_info = {"pid": pi.dwProcessId, "tid": pi.dwThreadId, "hProcess": pi.hProcess}
         kernel32.CloseHandle(pi.hThread)
@@ -275,14 +345,12 @@ class GameBridge:
         return self._process_info["hProcess"] if self._process_info else None
 
 
-def launch_game(game_dir: Path, map_id: int, options: list,
-                resolution_index: int = 0) -> tuple:
-    """简洁启动入口 — 匹配原版 exe 行为.
-
-    原版流程: config.lua + map.o + CreateProcess.
-    不创建 sl/map.map，不修改 GameSetting.inf.
-    """
-    bridge = GameBridge(game_dir, map_id, options, resolution_index)
+def launch_game(manifest: MapLaunchManifest) -> tuple:
+    """从 MapLaunchManifest 启动游戏，资源准备必须已经完成."""
+    try:
+        bridge = GameBridge(manifest)
+    except Exception as e:
+        return None, f"启动清单无效:\n{e}"
 
     if not bridge.prepare():
         return None, "准备失败:\n" + "\n".join(bridge._prepare_errors)
@@ -300,7 +368,10 @@ def launch_game(game_dir: Path, map_id: int, options: list,
         messages.append("[诊断问题]\n" + "\n".join(f"  [ERR] {e}" for e in diag["errors"]))
     if diag.get("failure_kind"):
         messages.append(f"[失败类型] {diag['failure_kind']}")
-    if diag["error_log_tail"]:
-        messages.append(f"[错误日志]\n{diag['error_log_tail'][:1000]}")
+    if diag.get("log_dir"):
+        messages.append(f"[日志目录]\n{diag['log_dir']}")
+    for name, content in diag.get("diagnostic_logs", {}).items():
+        if content:
+            messages.append(f"[日志: {name}]\n{content}")
 
     return bridge, "\n\n".join(messages)

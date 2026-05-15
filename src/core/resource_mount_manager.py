@@ -22,9 +22,10 @@ def _atomic_write(path: Path, data: bytes) -> None:
 class ResourceMountManager:
     """管理 sl/map.map 虚拟文件系统的创建和验证."""
 
-    # 挂载点 — 只写 sl/map.map（匹配原版 _ensure_sl_map）
+    # 挂载点 — 同时写根目录和 core 目录，让运行时读取路径可验证。
     MOUNT_POINTS = [
         Path("sl") / "map.map",
+        Path("core") / "sl" / "map.map",
     ]
 
     def __init__(self, game_dir: Path, cache_dir: Optional[Path] = None):

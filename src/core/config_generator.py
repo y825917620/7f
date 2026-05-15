@@ -4,6 +4,10 @@
 from pathlib import Path
 
 
+ORIGINAL_HELPER_004 = [4938529, 13879638, 13889092, 26660]
+ORIGINAL_HELPER_005 = [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120]
+
+
 def _read_helper_from_setting(game_dir):
     """从 GameSetting.inf 读取 helper_get004/helper_get005 的值."""
     try:
@@ -47,7 +51,7 @@ def generate_edt2_lua(map_id, options, control_id=1, display=0, game_dir=None):
       tempConfigLuaMapOptionInfo(10个{idx,val})
       SetCurrentControlID GetMapOptionInfo helper_get006 GetMapOptionDisplay
     """
-    helper004, helper005 = _read_helper_from_setting(game_dir) if game_dir else ([0]*4, [0]*10)
+    helper004, helper005 = ORIGINAL_HELPER_004, ORIGINAL_HELPER_005
 
     option_parts = []
     for i in range(10):
@@ -65,7 +69,7 @@ def generate_edt2_lua(map_id, options, control_id=1, display=0, game_dir=None):
         f"SetCurrentControlID({control_id})\n"
         f"function GetMapOptionInfo() return tempConfigLuaMapOptionInfo end\n"
         f"function helper_get006() return '513133695' end\n"
-        f"function GetMapOptionDisplay() return 1 end"
+        f"function GetMapOptionDisplay() return {display} end"
     )
 
 

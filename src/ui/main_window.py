@@ -596,16 +596,32 @@ class LauncherWindow(QMainWindow):
         options = self._get_current_options()
 
         try:
-            # 简洁启动 — 匹配原版 exe
-            bridge, diag_msg = launch_game(
-                game_dir=game_dir,
+            resource_service = ResourceControlService(game_dir)
+            manifest = resource_service.prepare_launch_manifest(
                 map_id=map_id,
                 options=options,
                 resolution_index=self.resolution_combo.currentIndex(),
             )
+            if not manifest.is_valid():
+                self._show_diag(
+                    "资源准备失败",
+                    "\n".join(manifest.errors) or "地图资源未能生成有效启动清单",
+                    QMessageBox.Icon.Critical,
+                )
+                return
+
+            manifest_summary = (
+                f"地图ID: {manifest.map_id}\n"
+                f"挂载策略: {manifest.strategy}\n"
+                f"源SL: {manifest.sl_path}\n"
+                f"解包缓存: {manifest.unpacked_path}\n"
+                "挂载点:\n" + "\n".join(f"  - {p}" for p in manifest.mount_points)
+            )
+
+            bridge, diag_msg = launch_game(manifest)
 
             if bridge is None:
-                self._show_diag("启动失败", diag_msg, QMessageBox.Icon.Critical)
+                self._show_diag("启动失败", manifest_summary + "\n\n" + diag_msg, QMessageBox.Icon.Critical)
                 return
 
             self._last_launch_pid = bridge.process_id
@@ -618,7 +634,7 @@ class LauncherWindow(QMainWindow):
             )
 
             if diag_msg:
-                self._show_diag(f"启动诊断 — {map_name} ({map_id})", diag_msg,
+                self._show_diag(f"启动诊断 — {map_name} ({map_id})", manifest_summary + "\n\n" + diag_msg,
                                QMessageBox.Icon.Information)
 
         except Exception as e:

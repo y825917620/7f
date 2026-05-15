@@ -15,7 +15,8 @@ def test_prepare_writes_launch_cache_and_mount_point(temp_game_dir: Path, sample
     assert manifest.unpacked_path.exists()
     assert manifest.unpacked_path.read_bytes() == sample_payload
     assert (temp_game_dir / "sl" / "map.map").read_bytes() == sample_payload
-    assert len(manifest.mount_points) == 1
+    assert (temp_game_dir / "core" / "sl" / "map.map").read_bytes() == sample_payload
+    assert len(manifest.mount_points) == 2
     assert manifest.sl_sha256
     assert manifest.unpacked_sha256
 

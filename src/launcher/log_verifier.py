@@ -8,8 +8,44 @@ from typing import Optional, Dict
 class LogVerifier:
     """读取游戏日志目录，判断启动结果和失败类型."""
 
+    DIAGNOSTIC_LOGS = (
+        "init.log",
+        "error.log",
+        "net_state.log",
+        "log_err.log",
+        "cmd_0.log",
+        "!Live.log",
+        "!video.log",
+        "check_sum.log",
+    )
+
     def __init__(self, game_dir: Path):
         self.game_dir = Path(game_dir)
+
+    @staticmethod
+    def _read_text(path: Path) -> str:
+        return path.read_text(encoding="gbk", errors="ignore")
+
+    @staticmethod
+    def _tail_text(text: str, max_chars: int = 12000) -> str:
+        if len(text) <= max_chars:
+            return text.strip()
+        omitted = len(text) - max_chars
+        return f"[...前面省略 {omitted} 字符...]\n{text[-max_chars:].strip()}"
+
+    def _collect_diagnostic_logs(self, log_dir: Path) -> Dict[str, str]:
+        logs = {}
+        for name in self.DIAGNOSTIC_LOGS:
+            path = log_dir / name
+            if not path.exists() or not path.is_file():
+                continue
+            try:
+                content = self._tail_text(self._read_text(path))
+            except Exception as e:
+                content = f"[读取失败] {e}"
+            if content:
+                logs[name] = content
+        return logs
 
     def find_latest_log_dir(self) -> Optional[Path]:
         """找到最新的日志目录."""
@@ -42,6 +78,7 @@ class LogVerifier:
             "log_dir": str(log_dir) if log_dir else None,
             "init_log_exists": False,
             "map_id_match": False,
+            "resource_map_name": None,
             "has_sanguo_o": False,
             "has_begin_load": False,
             "after_run_count": 0,
@@ -49,6 +86,10 @@ class LogVerifier:
             "errors": [],
             "failure_kind": None,
             "error_log_tail": "",
+            "init_log_tail": "",
+            "net_state_log_tail": "",
+            "log_err_tail": "",
+            "diagnostic_logs": {},
             "tail_lines": [],
         }
 
@@ -63,6 +104,11 @@ class LogVerifier:
             return result
 
         result["log_dir"] = str(log_dir)
+        result["diagnostic_logs"] = self._collect_diagnostic_logs(log_dir)
+        result["init_log_tail"] = result["diagnostic_logs"].get("init.log", "")
+        result["error_log_tail"] = result["diagnostic_logs"].get("error.log", "")
+        result["net_state_log_tail"] = result["diagnostic_logs"].get("net_state.log", "")
+        result["log_err_tail"] = result["diagnostic_logs"].get("log_err.log", "")
 
         # 读 init.log
         init_log = log_dir / "init.log"
@@ -70,7 +116,7 @@ class LogVerifier:
         if init_log.exists():
             result["init_log_exists"] = True
             try:
-                init_content = init_log.read_text(encoding="gbk", errors="ignore")
+                init_content = self._read_text(init_log)
             except Exception as e:
                 result["errors"].append(f"读取 init.log 失败: {e}")
                 result["failure_kind"] = "log_read_error"
@@ -81,27 +127,32 @@ class LogVerifier:
         error_content = ""
         if error_log.exists():
             try:
-                error_content = error_log.read_text(encoding="gbk", errors="ignore")
-                err_lines = [l.strip() for l in error_content.splitlines() if l.strip()]
-                result["error_log_tail"] = "\n".join(err_lines[-20:])
+                error_content = self._read_text(error_log)
             except Exception:
                 pass
 
-        # 检查地图 — 游戏内部统一用 "sanguo" 作为地图名
+        net_state_content = ""
+        net_state_log = log_dir / "net_state.log"
+        if net_state_log.exists():
+            try:
+                net_state_content = self._read_text(net_state_log)
+            except Exception:
+                pass
+        combined_content = "\n".join([init_content, error_content, net_state_content])
+
+        # 检查地图 — 必须看到本次 manifest 的具体地图 ID。
         expected_name_num = f"设置读取地图名[{expected_map_id}]"
-        expected_name_sanguo = "设置读取地图名[sanguo]"
-        if expected_name_num in init_content or expected_name_sanguo in init_content:
+        init_lines = [line.strip() for line in init_content.splitlines()]
+        if expected_name_num in init_content or str(expected_map_id) in init_lines:
             result["map_id_match"] = True
+        if "设置读取地图名[sanguo]" in init_content:
+            result["resource_map_name"] = "sanguo"
 
         # 检查关键阶段
         result["has_sanguo_o"] = "do [map/sanguo/sanguo.o] ok!" in init_content
-        result["has_begin_load"] = (
-            f"begin load map[{expected_map_id}]" in init_content
-            or "begin load map[sanguo]" in init_content
-        )
+        result["has_begin_load"] = f"begin load map[{expected_map_id}]" in init_content
 
-        # 只要地图名匹配了 (sanguo)，就认为地图加载进行中
-        # sanguo.o 可能稍后才出现
+        # 只有地图名匹配时，才允许进入后续加载阶段判断。
         if result["map_id_match"] and not result["has_begin_load"]:
             result["has_begin_load"] = True  # 地图名正确即认为开始加载
         result["after_run_count"] = init_content.count("enter:AfterRunGameLogic")
@@ -118,6 +169,29 @@ class LogVerifier:
             result["errors"].append(
                 "UI 初始化失败 (tab_interface nil)"
             )
+
+        # 1b. 网络/重连链路失败：会持续触发 event.lua 的断线重连 UI 弹窗。
+        reconnect_markers = [
+            "通知脚本发生断线重连",
+            "断线重连中",
+            "重连成功",
+            "Ping服务通讯失败",
+            "底层与host server失去联系",
+        ]
+        if any(marker in combined_content for marker in reconnect_markers):
+            if not result["failure_kind"]:
+                result["failure_kind"] = "network_reconnect_loop"
+            result["errors"].append("游戏进入断线重连循环，重连 UI 控件为 nil，弹窗会持续出现")
+
+        if "打开内存映射失败" in combined_content:
+            if not result["failure_kind"]:
+                result["failure_kind"] = "memory_map_open_failed"
+            result["errors"].append("游戏未能打开 MemoryMapName=sanguo 内存映射")
+
+        if "网络初始化失败" in combined_content:
+            if not result["failure_kind"]:
+                result["failure_kind"] = "network_init_failed"
+            result["errors"].append("网络初始化失败，游戏未进入可用的本地对局链路")
 
         # 2. 地图读取失败
         read_fail_pattern = f"读取地图[{expected_map_id}]失败"

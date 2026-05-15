@@ -54,6 +54,7 @@ class ResourceControlService:
             return manifest
 
         manifest = self.mount_manager.prepare(map_id, rec["sl_path"])
+        manifest.map_path = Path(rec["map_path"]) if rec.get("map_path") else None
         manifest.options = list(options)
         manifest.resolution_index = resolution_index
         return manifest
