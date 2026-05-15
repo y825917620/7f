@@ -214,8 +214,7 @@ class GameBridge:
         return ""
 
     def _build_cmdline(self, game_path: Path) -> str:
-        # 原版 C++ 命令行格式: "game.exe" MemoryMapName=sanguo
-        return f'"{game_path}" {self.map_id} MemoryMapName=sanguo'
+        return f'"{game_path}" {self.map_id}'
 
     def _create_live_map_mapping(self, kernel32) -> Optional[str]:
         map_file = self.manifest.mount_points[0] if self.manifest.mount_points else self.manifest.unpacked_path
@@ -314,23 +313,8 @@ class GameBridge:
             if ptr_si:
                 ctypes.memset(ptr_si, 0, 512)
                 ctypes.c_uint32.from_address(ptr_si).value = self.map_id
-                # 写入地图名称到 SHM 偏移 0x10 (供游戏窗口标题使用)
-                map_name_bytes = self._get_map_name().encode("gbk")[:32]
-                ctypes.memmove(ptr_si + 0x10, map_name_bytes, len(map_name_bytes))
                 kernel32.UnmapViewOfFile(ptr_si)
             self._handles["start_info"] = h_start_info
-
-        # 1b. 登录共享内存 7fgame_game_client_login (4 bytes — 原版 C++ 精确大小)
-        # 设为 1 表示本地/已登录模式，避免游戏进入网络重连
-        h_login = kernel32.CreateFileMappingA(
-            wintypes.HANDLE(-1), None, 0x04, 0, 4, b"7fgame_game_client_login"
-        )
-        if h_login:
-            ptr_li = kernel32.MapViewOfFile(h_login, 0xF001F, 0, 0, 4)
-            if ptr_li:
-                ctypes.c_uint32.from_address(ptr_li).value = 1
-                kernel32.UnmapViewOfFile(ptr_li)
-            self._handles["login"] = h_login
 
         # 2. 匿名管道 + NUL 重定向
         class SECURITY_ATTRIBUTES(ctypes.Structure):
@@ -353,12 +337,7 @@ class GameBridge:
         if h_nul == wintypes.HANDLE(-1).value:
             h_nul = None
 
-        # 3. sanguo 内存映射 (地图运行态数据)
-        map_err = self._create_live_map_mapping(kernel32)
-        if map_err:
-            return False, f"创建内存映射失败:\n{map_err}"
-
-        # 4. 设置 STARTUPINFO
+        # 3. 设置 STARTUPINFO
         class STARTUPINFOA(ctypes.Structure):
             _fields_ = [
                 ("cb", wintypes.DWORD), ("lpReserved", wintypes.LPSTR),
