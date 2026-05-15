@@ -7,6 +7,7 @@ from typing import List, Optional
 
 from .map_package_analyzer import MapPackageAnalyzer
 from .map_launch_manifest import MapLaunchManifest
+from .map_catalog import MapCatalog
 
 
 class ResourceMountManager:
@@ -84,7 +85,69 @@ class ResourceMountManager:
         manifest.strategy = "file_mount"
         return manifest
 
+    def prepare_with_strategy(self, map_id: int, sl_path: Path, strategy: str) -> MapLaunchManifest:
+        """使用指定策略准备地图资源.
+
+        Args:
+            strategy: "file_mount" | "mapfile_arg" | "memory_map"
+        """
+        if strategy == "file_mount":
+            return self.prepare(map_id, sl_path)
+
+        manifest = MapLaunchManifest(map_id=map_id, game_dir=self.game_dir, sl_path=sl_path)
+        report = MapPackageAnalyzer.analyze(sl_path)
+        if not report["ok"]:
+            manifest.add_error(report.get("error") or ".sl 分析未通过")
+            manifest.strategy = "analysis_failed"
+            return manifest
+
+        manifest.set_hashes(sl_sha256=report.get("sl_sha256"))
+
+        # 解压到缓存
+        cache_file = self.cache_dir / f"{map_id}_unpacked.map"
+        try:
+            decompressed = MapPackageAnalyzer.decompress(sl_path)
+            if decompressed is None:
+                manifest.add_error("LZMA 解压返回 None")
+                manifest.strategy = "decompress_failed"
+                return manifest
+            cache_file.write_bytes(decompressed)
+        except Exception as e:
+            manifest.add_error(f"写入缓存失败: {e}")
+            manifest.strategy = "cache_write_failed"
+            return manifest
+
+        manifest.unpacked_path = cache_file
+        manifest.unpacked_sha256 = report.get("dec_sha256")
+
+        if strategy == "mapfile_arg":
+            # /mapfile= 策略：不复制到游戏目录，仅记录缓存路径
+            manifest.strategy = "mapfile_arg"
+            manifest.mount_points = [cache_file]
+
+        elif strategy == "memory_map":
+            # MemoryMapName= 策略：不复制文件，由 GameBridge 创建内存映射
+            manifest.strategy = "memory_map"
+            manifest.mount_points = [cache_file]
+
+        return manifest
+
+    def dry_run(self, map_id: int, sl_path: Path) -> dict:
+        """干运行：只生成校验报告，不实际挂载."""
+        catalog = MapCatalog(self.game_dir)
+
+        report = {
+            "map_id": map_id,
+            "catalog_diag": catalog.diagnose(map_id),
+            "sl_analysis": MapPackageAnalyzer.analyze(sl_path),
+            "candidate_mount_points": [str(self.game_dir / p) for p in self.CANDIDATE_MOUNT_POINTS],
+        }
+        report["ready"] = (
+            report["catalog_diag"] is None
+            and report["sl_analysis"]["ok"]
+        )
+        return report
+
     def cleanup(self, manifest: MapLaunchManifest):
         """可选：启动失败后清理挂载点（但保留缓存和 manifest 用于诊断）."""
-        # 当前策略：不自动删除挂载点，便于用户手动排查
         pass
