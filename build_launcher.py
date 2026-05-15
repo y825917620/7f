@@ -47,6 +47,11 @@ args = [
     "--hidden-import", "PyQt6.QtCore",
     "--hidden-import", "PyQt6.QtGui",
     "--hidden-import", "PyQt6.QtWidgets",
+    # cryptography (Blowfish 解密)
+    "--hidden-import", "cryptography",
+    "--hidden-import", "cryptography.hazmat.primitives.ciphers",
+    "--hidden-import", "cryptography.hazmat.primitives.ciphers.algorithms",
+    "--hidden-import", "cryptography.hazmat.primitives.ciphers.modes",
 ]
 
 import shutil
