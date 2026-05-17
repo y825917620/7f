@@ -102,16 +102,10 @@ class HostService:
             self._log(f"HostService error: {e}")
 
     def _handle_game(self, conn: socket.socket):
-        conn.settimeout(30)
+        conn.settimeout(5)  # 短超时便于心跳
         buf = b""
-        login_sent = False
         try:
-            # V50: 主动发送登录成功，然后等游戏请求
-            login_payload = _build_login_result(self.player_slot)
-            conn.sendall(_build_packet(0x013A, login_payload))
-            login_sent = True
-            self._log(f"Sent proactive 0x013A login result")
-
+            self._log(f"Session started, waiting for game opcodes...")
             while self._running:
                 try:
                     data = conn.recv(4096)
@@ -130,13 +124,14 @@ class HostService:
                         self._handle_opcode(conn, opcode, payload)
 
                 except socket.timeout:
-                    # 发送心跳控制帧
-                    cf = _build_control_frame(0, 0, self._keep_counter)
-                    try:
-                        conn.sendall(_build_packet(0x0138, cf))
-                        self._keep_counter += 1
-                    except Exception:
-                        break
+                    self._keep_counter += 1
+                    # 只在收到过数据后才发送心跳
+                    if buf:
+                        try:
+                            cf = _build_control_frame(0, 0, self._keep_counter)
+                            conn.sendall(_build_packet(0x0138, cf))
+                        except Exception:
+                            break
                 except ConnectionResetError:
                     break
                 except Exception as e:
