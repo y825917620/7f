@@ -178,19 +178,53 @@ class GameBridge:
         return len(self._prepare_errors) == 0
 
     def launch(self) -> tuple:
-        """启动 HostService + 创建 PlatformBlock SHM + 启动游戏."""
-        # 0. 启动本地 HostService
+        """V49: 清端口 → HostService → 确认监听 → SHM → CreateProcess."""
+        # 0a. 清理旧进程和端口 (V49)
+        try:
+            import subprocess
+            # 杀旧 game.exe
+            subprocess.run(["taskkill", "/F", "/IM", "game.exe"], capture_output=True, timeout=5)
+            # 释放端口 29002
+            for line in subprocess.run(
+                ["netstat", "-ano"], capture_output=True, text=True, timeout=5
+            ).stdout.splitlines():
+                if ":29002" in line and "LISTENING" in line:
+                    parts = line.strip().split()
+                    pid = parts[-1]
+                    subprocess.run(["taskkill", "/F", "/PID", pid], capture_output=True, timeout=3)
+        except Exception:
+            pass
+        time.sleep(0.5)
+
+        # 0b. 启动本地 HostService
         from .host_service import HostService
         self._host = HostService(self.player_slot, self.player_name)
         self._host.start()
-        time.sleep(0.2)  # 等端口就绪
+        time.sleep(0.3)
+
+        # 0c. V49: 确认 TCP 监听成功
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(3)
+        try:
+            s.connect(("127.0.0.1", self.host_port))
+            s.close()
+        except Exception:
+            return False, f"HostService TCP {self.host_port} 监听失败，中止启动"
 
         kernel32 = ctypes.windll.kernel32
 
-        # 1. PlatformBlock
+        # 1. PlatformBlock (V49: 记录端口字段)
         block = build_platform_block(self.map_id, self.host_ip, self.host_port,
                                      self.player_name, self.player_slot, self.mode)
         custom_name = f"SL10002_LANV45_10002_{os.getpid()}"
+        # V49 日志: 确认 MemoryMap 端口字段
+        port_in_block = struct.unpack_from("<H", block, 0x46)[0]
+        try:
+            with open(self.game_dir / "SL10002_ONE_LOG.txt", "a", encoding="utf-8") as f:
+                f.write(f"[V49] PlatformBlock HostSrvPort=0x{port_in_block:04X} ({port_in_block}) MemoryMapName={custom_name}\n")
+        except Exception:
+            pass
 
         kernel32.CreateFileMappingA.restype = wintypes.HANDLE
         kernel32.MapViewOfFile.restype = ctypes.c_void_p

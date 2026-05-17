@@ -172,11 +172,19 @@ class HostService:
             cf = _build_control_frame(2, 0, self._keep_counter)
             conn.sendall(_build_packet(0xFFFF, cf))
 
+    @property
+    def is_listening(self):
+        return self._sock is not None and self._running
+
     def _log(self, msg: str):
-        path = Path("data/SL10002_host_service.log")
         try:
             ts = time.strftime("%Y-%m-%d %H:%M:%S")
+            path = Path("data/SL10002_host_service.log")
             with open(path, "a", encoding="utf-8") as f:
                 f.write(f"[{ts}] {msg}\n")
+            # 同时写 ONE_LOG 预启动
+            onelog = Path("data/SL10002_ONE_LOG.txt")
+            if not onelog.exists():
+                onelog.write_text(f"SL10002 V49 {ts}\n[HS] {msg}\n", encoding="utf-8")
         except Exception:
             pass
