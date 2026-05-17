@@ -40,6 +40,7 @@ args = [
     "--hidden-import", "src.launcher.game_launcher",
     "--hidden-import", "src.launcher.game_settings",
     "--hidden-import", "src.launcher.log_verifier",
+    "--hidden-import", "src.launcher.host_service",
     "--hidden-import", "src.ui.main_window",
     "--hidden-import", "src.ui.sponsor_widgets",
     # PyQt6 hidden imports
