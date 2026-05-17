@@ -1,687 +1,572 @@
 # -*- coding: utf-8 -*-
-"""启动器主窗口"""
+"""神龙地图启动器 — 局域网联机版 UI"""
 
 import sys
 import time
-import webbrowser
 from pathlib import Path
 
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QComboBox, QTabWidget, QGroupBox, QGridLayout,
-    QMessageBox, QStatusBar, QMenuBar, QMenu, QFileDialog, QDialog,
-    QRadioButton, QButtonGroup, QLineEdit, QTextBrowser, QCheckBox,
-    QSplitter, QTableWidget, QTableWidgetItem, QHeaderView, QScrollArea,
-    QPlainTextEdit
+    QLabel, QPushButton, QComboBox, QGroupBox, QLineEdit,
+    QMessageBox, QStatusBar, QFileDialog,
+    QTableWidget, QTableWidgetItem, QHeaderView, QSplitter,
+    QGridLayout, QRadioButton, QButtonGroup, QFrame,
 )
 from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QIcon, QPixmap, QFont, QAction
+from PyQt6.QtGui import QFont, QPixmap
 
-from ..data.map_data import (
-    MAP_CATEGORIES, MAP_INFO, DEFAULT_MAP_OPTIONS,
-    RESOLUTION_OPTIONS
-)
-from ..core.config_generator import generate_config_lua
+from ..data.map_data import MAP_CATEGORIES, MAP_INFO, RESOLUTION_OPTIONS
 from ..core.map_parser import MapOptionParser
-from .sponsor_widgets import (
-    SPONSOR_URLS, QQ_GROUP, VIP_PRODUCTS,
-    VersionCheckThread, SponsorSettingsDialog,
-)
-from ..launcher.game_launcher import GameBridge, launch_game
-from ..launcher.log_verifier import LogVerifier
+from ..launcher.game_launcher import launch_game
+
+# ─── 暗色工业风调色板 ───
+CSS = """
+/* 全局 */
+QMainWindow, QDialog {
+    background-color: #121418;
+    color: #bcc4cc;
+}
+QWidget {
+    font-family: "Microsoft YaHei", "Consolas", monospace;
+    font-size: 13px;
+}
+
+/* 分组框 */
+QGroupBox {
+    border: 1px solid #2a2e34;
+    border-radius: 4px;
+    margin-top: 14px;
+    padding: 16px 12px 12px 12px;
+    font-weight: bold;
+    color: #6a9fd8;
+    background: #181c20;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 8px;
+    color: #6a9fd8;
+}
+
+/* 按钮 — 主按钮 */
+QPushButton#launchBtn {
+    background: #1a5c2a;
+    color: #4ae04a;
+    border: 1px solid #2a8a3a;
+    border-radius: 4px;
+    padding: 12px 40px;
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+QPushButton#launchBtn:hover {
+    background: #1e7032;
+    border-color: #3ab04a;
+}
+QPushButton#launchBtn:disabled {
+    background: #1a1e22;
+    color: #3a3a3a;
+    border-color: #2a2e34;
+}
+
+/* 普通按钮 */
+QPushButton {
+    background: #1a1e24;
+    color: #8899aa;
+    border: 1px solid #2a2e34;
+    border-radius: 3px;
+    padding: 6px 16px;
+}
+QPushButton:hover {
+    background: #222830;
+    border-color: #4a6a8a;
+}
+QPushButton:checked {
+    background: #1a2e3e;
+    color: #6a9fd8;
+    border-color: #3a6080;
+}
+
+/* 模式选择按钮 */
+QPushButton#modeBtn {
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+QPushButton#modeBtn:checked {
+    background: #1a3040;
+    color: #60c0ff;
+    border: 2px solid #4090d0;
+}
+
+/* ComboBox */
+QComboBox {
+    background: #1a1e24;
+    color: #bcc4cc;
+    border: 1px solid #2a2e34;
+    border-radius: 3px;
+    padding: 4px 8px;
+}
+QComboBox:hover { border-color: #3a4a5a; }
+QComboBox::drop-down { border: none; }
+QComboBox QAbstractItemView {
+    background: #181c20;
+    color: #bcc4cc;
+    selection-background-color: #1a3a50;
+    border: 1px solid #2a2e34;
+}
+
+/* LineEdit */
+QLineEdit {
+    background: #1a1e24;
+    color: #dde4ec;
+    border: 1px solid #2a2e34;
+    border-radius: 3px;
+    padding: 4px 8px;
+}
+QLineEdit:focus { border-color: #4090d0; }
+
+/* 表格 */
+QTableWidget {
+    background: #14181c;
+    gridline-color: #1e2228;
+    border: 1px solid #2a2e34;
+    selection-background-color: #1a3040;
+    color: #bcc4cc;
+}
+QTableWidget::item { padding: 4px 8px; }
+QTableWidget::item:selected { background: #1a3a50; color: #eef4fa; }
+QHeaderView::section {
+    background: #181c20;
+    color: #6a9fd8;
+    border: none;
+    padding: 6px 8px;
+    font-weight: bold;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+/* StatusBar */
+QStatusBar {
+    background: #0e1014;
+    color: #5a6a7a;
+    border-top: 1px solid #1e2228;
+}
+
+/* 分隔线 */
+QFrame#sep {
+    background: #2a2e34;
+    max-height: 1px;
+}
+
+/* 滚动条 */
+QScrollBar:vertical {
+    background: #121418;
+    width: 8px;
+}
+QScrollBar::handle:vertical {
+    background: #2a3040;
+    border-radius: 4px;
+    min-height: 20px;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
+"""
 
 
 class LauncherWindow(QMainWindow):
-    """启动器主窗口"""
-
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("神龙地图启动器 - www.7F555.com")
-        self.setMinimumSize(1000, 700)
+        self.setWindowTitle("神龙地图启动器 — LAN")
+        self.setMinimumSize(960, 640)
 
-        # 内部状态
+        # 状态
         if getattr(sys, 'frozen', False):
             exe_dir = Path(sys.executable).parent
-            # 检测 exe 是否直接放在游戏目录里（包含 map/、core/ 等）
             if (exe_dir / "map").exists() and (exe_dir / "core").exists():
                 self.game_dir = exe_dir
             else:
-                # exe 在根目录，游戏文件在 data/ 子目录
                 self.game_dir = exe_dir / "data"
         else:
-            # 开发模式：从 src/ui/main_window.py 回溯到项目根目录，再找 data/
             self.game_dir = Path(__file__).parent.parent.parent / "data"
 
         self.selected_map = None
-        self.current_options = {}
-        self.vip_settings = {}
-        self.g_map_display = 0
-        self._launcher_mutex = None  # 互斥锁句柄，必须保持存活
-
-        # 加载默认选项
-        for k, v in DEFAULT_MAP_OPTIONS.items():
-            self.current_options[k] = list(v)
+        self._parsed_map_options = []
+        self._parsed_player_num = 1
 
         self._setup_ui()
-        self._setup_menu()
-        self._setup_statusbar()
         self._load_map_list("全部地图")
-        self._check_version()
+        self._status("READY — 选择地图并启动")
 
-    # =====================================================================
+    # ═══════════════════════════════════════════
     # UI 构建
-    # =====================================================================
+    # ═══════════════════════════════════════════
 
     def _setup_ui(self):
         central = QWidget()
         self.setCentralWidget(central)
-        main_layout = QVBoxLayout(central)
+        root = QHBoxLayout(central)
+        root.setContentsMargins(8, 8, 8, 0)
+        root.setSpacing(8)
 
-        # 主分割器
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        main_layout.addWidget(splitter)
+        # ── 左侧: 地图列表 ──
+        left = QVBoxLayout()
+        left.setSpacing(6)
 
-        # ---- 左侧面板：分类 + 地图列表 ----
-        left_panel = QWidget()
-        left_layout = QVBoxLayout(left_panel)
-
-        # 分类按钮
-        left_layout.addWidget(QLabel("<b>地图分类</b>"))
-        cat_widget = QWidget()
-        cat_layout = QVBoxLayout(cat_widget)
-        cat_layout.setSpacing(4)
-        cat_layout.setContentsMargins(0, 0, 0, 0)
-
-        self.category_group = QButtonGroup(self)
-        self.category_group.setExclusive(True)
-
-        for cat in MAP_CATEGORIES:
+        # 分类选择
+        cat_row = QHBoxLayout()
+        self._cat_group = QButtonGroup(self)
+        self._cat_group.setExclusive(True)
+        for i, cat in enumerate(MAP_CATEGORIES[:6]):
             btn = QPushButton(cat)
             btn.setCheckable(True)
-            btn.setFlat(True)
-            btn.setStyleSheet(
-                "QPushButton { text-align: left; padding: 5px 10px; border: 1px solid #ccc; }"
-                "QPushButton:hover { background-color: #e0e0e0; }"
-                "QPushButton:checked { background-color: #4CAF50; color: white; font-weight: bold; border: 1px solid #4CAF50; }"
-            )
-            self.category_group.addButton(btn)
-            cat_layout.addWidget(btn)
+            btn.setChecked(i == 0)
             btn.clicked.connect(lambda checked, c=cat: self._load_map_list(c))
+            self._cat_group.addButton(btn)
+            cat_row.addWidget(btn)
+        left.addLayout(cat_row)
 
-        # 默认选中"全部地图"
-        self.category_group.buttons()[0].setChecked(True)
-        cat_layout.addStretch()
-        left_layout.addWidget(cat_widget)
+        # 搜索栏
+        search_row = QHBoxLayout()
+        self._search = QLineEdit()
+        self._search.setPlaceholderText("搜索地图名...")
+        self._search.textChanged.connect(self._filter_maps)
+        search_row.addWidget(self._search)
+
+        # 游戏目录
+        self._dir_label = QLabel(str(self.game_dir))
+        self._dir_label.setStyleSheet("color: #4a6a7a; font-size: 10px;")
+        btn_browse = QPushButton("DIR")
+        btn_browse.clicked.connect(self._choose_game_dir)
+        search_row.addWidget(btn_browse)
+        left.addLayout(search_row)
+        left.addWidget(self._dir_label)
 
         # 地图表格
-        left_layout.addWidget(QLabel("<b>地图列表</b>"))
-        self.map_table = QTableWidget()
-        self.map_table.setColumnCount(4)
-        self.map_table.setHorizontalHeaderLabels(["地图名字", "地图作者", "地图热度", "地图状态"])
-        self.map_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self.map_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
-        self.map_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        self.map_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
-        self.map_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-        self.map_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
-        self.map_table.itemSelectionChanged.connect(self._on_map_selected)
-        left_layout.addWidget(self.map_table, 1)
+        self._map_table = QTableWidget()
+        self._map_table.setColumnCount(3)
+        self._map_table.setHorizontalHeaderLabels(["地图", "作者", "热度"])
+        self._map_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self._map_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
+        self._map_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+        self._map_table.setColumnWidth(1, 80)
+        self._map_table.setColumnWidth(2, 60)
+        self._map_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self._map_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self._map_table.itemSelectionChanged.connect(self._on_map_selected)
+        self._map_table.verticalHeader().setVisible(False)
+        left.addWidget(self._map_table, 1)
 
-        # 游戏目录选择
-        dir_layout = QHBoxLayout()
-        self.dir_label = QLabel(f"目录: {self.game_dir}")
-        self.dir_label.setWordWrap(True)
-        btn_dir = QPushButton("浏览...")
-        btn_dir.clicked.connect(self._choose_game_dir)
-        dir_layout.addWidget(self.dir_label, 1)
-        dir_layout.addWidget(btn_dir)
-        left_layout.addLayout(dir_layout)
+        root.addLayout(left, 3)
 
-        splitter.addWidget(left_panel)
+        # ── 分隔线 ──
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.VLine)
+        sep.setStyleSheet("background: #1e2228; max-width: 1px;")
+        root.addWidget(sep)
 
-        # ---- 右侧面板：选项 + 赞助 + 关于 ----
-        right_panel = QWidget()
-        right_layout = QVBoxLayout(right_panel)
+        # ── 右侧: 模式 + 选项 + 启动 ──
+        right = QVBoxLayout()
+        right.setSpacing(8)
 
-        self.tabs = QTabWidget()
+        # 模式选择
+        mode_gb = QGroupBox("网络模式")
+        mode_layout = QVBoxLayout(mode_gb)
 
-        self.tab_options = self._build_options_tab()
-        self.tabs.addTab(self.tab_options, "地图选项")
+        self._mode_group = QButtonGroup(self)
+        mode_row = QHBoxLayout()
+        modes = [
+            ("single", "单机本地"),
+            ("host", "局域网主机"),
+            ("client", "局域网客户端"),
+        ]
+        for i, (mode_id, label) in enumerate(modes):
+            btn = QPushButton(label)
+            btn.setObjectName("modeBtn")
+            btn.setCheckable(True)
+            btn.setChecked(i == 0)
+            btn.clicked.connect(lambda checked, m=mode_id: self._on_mode_changed(m))
+            self._mode_group.addButton(btn)
+            mode_row.addWidget(btn)
+        mode_layout.addLayout(mode_row)
 
-        self.tab_sponsor = self._build_sponsor_tab()
-        self.tabs.addTab(self.tab_sponsor, "赞助设置")
+        # LAN 设置行
+        lan_row = QHBoxLayout()
+        lan_row.addWidget(QLabel("主机IP"))
+        self._host_ip = QLineEdit("127.0.0.1")
+        self._host_ip.setMaximumWidth(140)
+        self._host_ip.setEnabled(False)
+        lan_row.addWidget(self._host_ip)
 
-        self.tab_about = self._build_about_tab()
-        self.tabs.addTab(self.tab_about, "关于 & 赞助")
+        lan_row.addWidget(QLabel("端口"))
+        self._host_port = QLineEdit("29002")
+        self._host_port.setMaximumWidth(70)
+        self._host_port.setEnabled(False)
+        lan_row.addWidget(self._host_port)
 
-        right_layout.addWidget(self.tabs)
+        lan_row.addWidget(QLabel("玩家名"))
+        self._player_name = QLineEdit("Player1")
+        self._player_name.setMaximumWidth(120)
+        lan_row.addWidget(self._player_name)
+
+        lan_row.addWidget(QLabel("槽位"))
+        self._player_slot = QComboBox()
+        for i in range(1, 25):
+            self._player_slot.addItem(str(i), i)
+        self._player_slot.setMaximumWidth(60)
+        lan_row.addWidget(self._player_slot)
+        lan_row.addStretch()
+        mode_layout.addLayout(lan_row)
+        right.addWidget(mode_gb)
+
+        # 地图预览 + 信息
+        info_gb = QGroupBox("地图详情")
+        info_layout = QHBoxLayout(info_gb)
+        self._thumb = QLabel()
+        self._thumb.setFixedSize(100, 100)
+        self._thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._thumb.setStyleSheet("border: 1px solid #20242a; background: #101418; color: #3a4a5a;")
+        self._thumb.setText("N/A")
+        info_layout.addWidget(self._thumb)
+
+        self._info_text = QLabel("选择地图")
+        self._info_text.setWordWrap(True)
+        self._info_text.setStyleSheet("color: #6a7a8a; font-size: 12px;")
+        info_layout.addWidget(self._info_text, 1)
+        right.addWidget(info_gb)
+
+        # 选项区
+        opt_gb = QGroupBox("游戏选项")
+        self._opt_grid = QGridLayout()
+        opt_gb.setLayout(self._opt_grid)
+        right.addWidget(opt_gb)
+
+        # 分辨率
+        res_row = QHBoxLayout()
+        res_row.addWidget(QLabel("分辨率"))
+        self._res_combo = QComboBox()
+        for name, _, _ in RESOLUTION_OPTIONS:
+            self._res_combo.addItem(name)
+        res_row.addWidget(self._res_combo)
+        res_row.addStretch()
+
+        # 玩家数
+        res_row.addWidget(QLabel("玩家"))
+        self._player_num_combo = QComboBox()
+        self._player_num_combo.currentIndexChanged.connect(self._on_player_changed)
+        res_row.addWidget(self._player_num_combo)
+        right.addLayout(res_row)
+
+        right.addStretch()
 
         # 启动按钮
-        launch_layout = QHBoxLayout()
-        launch_layout.addStretch()
-        self.btn_launch = QPushButton("启动游戏")
-        self.btn_launch.setStyleSheet(
-            "QPushButton { font-size: 16px; padding: 10px 30px; }"
-            "QPushButton:enabled { background-color: #4CAF50; color: white; }"
-            "QPushButton:disabled { background-color: #cccccc; }"
-        )
-        self.btn_launch.setEnabled(False)
-        self.btn_launch.clicked.connect(self._launch_game)
-        launch_layout.addWidget(self.btn_launch)
-        right_layout.addLayout(launch_layout)
+        launch_row = QHBoxLayout()
+        launch_row.addStretch()
+        self._launch_btn = QPushButton("启动游戏")
+        self._launch_btn.setObjectName("launchBtn")
+        self._launch_btn.setEnabled(False)
+        self._launch_btn.clicked.connect(self._launch_game)
+        self._launch_btn.setMinimumHeight(48)
+        launch_row.addWidget(self._launch_btn)
+        launch_row.addStretch()
+        right.addLayout(launch_row)
 
-        splitter.addWidget(right_panel)
-        splitter.setSizes([380, 620])
+        root.addLayout(right, 2)
 
-        # ---- 底部操作按钮 ----
-        bottom_layout = QHBoxLayout()
-        bottom_layout.setSpacing(10)
+        # 状态栏
+        self._statusbar = QStatusBar()
+        self.setStatusBar(self._statusbar)
 
-        btn_qq = QPushButton("加入QQ群")
-        btn_qq.clicked.connect(self._join_qq_group)
-        bottom_layout.addWidget(btn_qq)
+    # ═══════════════════════════════════════════
+    # 逻辑
+    # ═══════════════════════════════════════════
 
-        btn_update = QPushButton("更新内容")
-        btn_update.clicked.connect(lambda: webbrowser.open(SPONSOR_URLS["版本更新"]))
-        bottom_layout.addWidget(btn_update)
+    def _status(self, msg: str):
+        self._statusbar.showMessage(msg)
 
-        btn_live = QPushButton("看直播")
-        btn_live.clicked.connect(lambda: webbrowser.open(SPONSOR_URLS["直播"]))
-        bottom_layout.addWidget(btn_live)
-
-        btn_sponsor = QPushButton("赞助大使")
-        btn_sponsor.clicked.connect(self._open_sponsor_dialog)
-        bottom_layout.addWidget(btn_sponsor)
-
-        btn_single = QPushButton("单机启动")
-        btn_single.setStyleSheet("font-weight: bold;")
-        btn_single.clicked.connect(self._launch_game)
-        bottom_layout.addWidget(btn_single)
-
-        bottom_layout.addStretch()
-        main_layout.addLayout(bottom_layout)
-
-    def _build_options_tab(self):
-        widget = QWidget()
-        layout = QVBoxLayout(widget)
-
-        # 缩略图 + 地图信息
-        info_layout = QHBoxLayout()
-        self.thumbnail_label = QLabel()
-        self.thumbnail_label.setFixedSize(140, 140)
-        self.thumbnail_label.setStyleSheet("border: 1px solid #ccc; background-color: #f0f0f0;")
-        self.thumbnail_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.thumbnail_label.setText("无预览")
-        info_layout.addWidget(self.thumbnail_label)
-
-        self.map_detail_label = QLabel("请选择地图")
-        self.map_detail_label.setWordWrap(True)
-        self.map_detail_label.setStyleSheet("padding: 5px;")
-        info_layout.addWidget(self.map_detail_label, 1)
-        layout.addLayout(info_layout)
-
-        # 分辨率设置
-        res_group = QGroupBox("游戏分辨率")
-        res_layout = QHBoxLayout(res_group)
-        self.resolution_combo = QComboBox()
-        for name, w, h in RESOLUTION_OPTIONS:
-            self.resolution_combo.addItem(name, (w, h))
-        res_layout.addWidget(self.resolution_combo)
-        res_layout.addStretch()
-        layout.addWidget(res_group)
-
-        # 动态选项区域 - 地图选择后填充
-        self.options_grid = QGridLayout()
-        layout.addLayout(self.options_grid)
-
-        # 玩家选项（固定在最后）
-        self.player_combo = QComboBox()
-        self.player_combo.currentIndexChanged.connect(self._on_player_changed)
-        layout.addWidget(QLabel("玩家:"))
-        layout.addWidget(self.player_combo)
-
-        layout.addStretch()
-        return widget
-
-    def _on_player_changed(self, index):
-        map_offset = self.selected_map - 10000 if self.selected_map else 0
-        if map_offset in self.current_options and len(self.current_options[map_offset]) == 11:
-            self.current_options[map_offset][10] = self.player_combo.currentData()
-
-    def _build_sponsor_tab(self):
-        """赞助设置标签页 - 对应原启动器的VIP购买界面"""
-        widget = QWidget()
-        layout = QVBoxLayout(widget)
-
-        # 顶部提示
-        hint = QLabel(
-            "<h3>赞助大使设置</h3>"
-            "<p style='color:red;'>购买的赞助大使，启动地图后自动生效</p>"
-            "<p>请勾选要启用的赞助项目（无需实际支付）：</p>"
-        )
-        hint.setWordWrap(True)
-        layout.addWidget(hint)
-
-        # VIP 商品列表
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_content = QWidget()
-        scroll_layout = QVBoxLayout(scroll_content)
-
-        self.vip_checkboxes = {}
-        self.vip_type_combos = {}
-
-        for prod in VIP_PRODUCTS:
-            group = QGroupBox(prod["name"])
-            g_layout = QHBoxLayout(group)
-
-            cb = QCheckBox("启用赞助")
-            self.vip_checkboxes[prod["name"]] = cb
-            g_layout.addWidget(cb)
-
-            combo = QComboBox()
-            combo.addItem(f"永久 - {prod['permanent']}元", "permanent")
-            combo.addItem(f"月卡 - {prod['monthly']}元", "monthly")
-            combo.setEnabled(False)
-            self.vip_type_combos[prod["name"]] = combo
-            g_layout.addWidget(combo)
-
-            # 联动：启用时才可选类型
-            cb.toggled.connect(combo.setEnabled)
-
-            g_layout.addStretch()
-            scroll_layout.addWidget(group)
-
-        scroll_layout.addStretch()
-        scroll.setWidget(scroll_content)
-        layout.addWidget(scroll)
-
-        # 账号信息（兼容原界面）
-        acct_group = QGroupBox("账号信息（可选，兼容原启动器格式）")
-        acct_layout = QGridLayout(acct_group)
-        acct_layout.addWidget(QLabel("账号:"), 0, 0)
-        self.sponsor_account = QLineEdit()
-        acct_layout.addWidget(self.sponsor_account, 0, 1)
-        acct_layout.addWidget(QLabel("确认账号:"), 1, 0)
-        self.sponsor_account2 = QLineEdit()
-        acct_layout.addWidget(self.sponsor_account2, 1, 1)
-        layout.addWidget(acct_group)
-
-        return widget
-
-    def _build_about_tab(self):
-        widget = QWidget()
-        layout = QVBoxLayout(widget)
-
-        about_text = QTextBrowser()
-        about_text.setOpenExternalLinks(True)
-        about_text.setHtml(f"""
-        <h2>神龙地图启动器 5.2</h2>
-        <p>基于原启动器功能完整重写的独立版本。</p>
-        <hr>
-        <h3>赞助 & 联系方式</h3>
-        <ul>
-            <li><b>QQ群:</b> {QQ_GROUP}</li>
-            <li><b>官网:</b> <a href="{SPONSOR_URLS['官网']}">{SPONSOR_URLS['官网']}</a></li>
-            <li><b>下载地址:</b> www.7F555.com</li>
-        </ul>
-        <h3>功能链接</h3>
-        <ul>
-            <li><a href="{SPONSOR_URLS['QQ联系']}">QQ联系页面</a></li>
-            <li><a href="{SPONSOR_URLS['排行榜']}">排行榜</a></li>
-            <li><a href="{SPONSOR_URLS['直播']}">直播</a></li>
-            <li><a href="{SPONSOR_URLS['版本更新']}">版本更新</a></li>
-        </ul>
-        <hr>
-        <p style="color:gray; font-size:12px;">
-        版本: 8.6.8 (新版独立实现)<br>
-        原项目: 玩家原创 - 神龙地图启动器
-        </p>
-        """)
-        layout.addWidget(about_text)
-        layout.addStretch()
-        return widget
-
-    def _setup_menu(self):
-        menubar = self.menuBar()
-
-        # 文件菜单
-        file_menu = menubar.addMenu("文件(&F)")
-        file_menu.addAction("选择游戏目录", self._choose_game_dir)
-        file_menu.addSeparator()
-        file_menu.addAction("退出", self.close)
-
-        # 工具菜单
-        tools_menu = menubar.addMenu("工具(&T)")
-        tools_menu.addAction("赞助设置...", self._open_sponsor_dialog)
-        tools_menu.addSeparator()
-        tools_menu.addAction("生成 config.lua", self._preview_config)
-
-        # 赞助菜单
-        sponsor_menu = menubar.addMenu("赞助(&S)")
-        for name, url in SPONSOR_URLS.items():
-            sponsor_menu.addAction(name, lambda u=url: webbrowser.open(u))
-
-        # 帮助菜单
-        help_menu = menubar.addMenu("帮助(&H)")
-        help_menu.addAction("QQ群: " + QQ_GROUP, lambda: QMessageBox.information(self, "QQ群", f"请加QQ群: {QQ_GROUP}"))
-        help_menu.addAction("检查更新", self._check_version)
-
-    def _setup_statusbar(self):
-        self.statusbar = QStatusBar()
-        self.setStatusBar(self.statusbar)
-        self.statusbar.showMessage(f"QQ群: {QQ_GROUP} | 官网: www.7F555.com")
-
-    # =====================================================================
-    # 逻辑处理
-    # =====================================================================
+    def _on_mode_changed(self, mode: str):
+        is_client = (mode == "client")
+        self._host_ip.setEnabled(is_client)
+        self._host_port.setEnabled(is_client)
 
     def _load_map_list(self, category="全部地图"):
-        self.map_table.setRowCount(0)
-        row = 0
+        self._map_table.setRowCount(0)
+        self._all_map_ids = []
         for map_id in sorted(MAP_INFO.keys()):
             info = MAP_INFO[map_id]
             if category != "全部地图" and info.get("category") != category:
                 continue
+            self._all_map_ids.append(map_id)
+        self._fill_table(self._all_map_ids)
 
-            self.map_table.insertRow(row)
+    def _filter_maps(self, text: str):
+        if not text:
+            self._fill_table(self._all_map_ids)
+            return
+        filtered = [mid for mid in self._all_map_ids
+                    if text.lower() in MAP_INFO.get(mid, {}).get("name", "").lower()]
+        self._fill_table(filtered)
 
-            item_name = QTableWidgetItem(info["name"])
-            item_name.setData(Qt.ItemDataRole.UserRole, map_id)
-            self.map_table.setItem(row, 0, item_name)
-
-            self.map_table.setItem(row, 1, QTableWidgetItem(info.get("author", "未知")))
-
-            heat = info.get("heat", 0)
-            item_heat = QTableWidgetItem(str(heat))
-            item_heat.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            self.map_table.setItem(row, 2, item_heat)
-
-            self.map_table.setItem(row, 3, QTableWidgetItem(info.get("status", "正常")))
-
-            row += 1
-
-        self.selected_map = None
-        self.btn_launch.setEnabled(False)
+    def _fill_table(self, ids):
+        self._map_table.setRowCount(0)
+        for row, map_id in enumerate(ids):
+            self._map_table.insertRow(row)
+            info = MAP_INFO[map_id]
+            item = QTableWidgetItem(info["name"])
+            item.setData(Qt.ItemDataRole.UserRole, map_id)
+            self._map_table.setItem(row, 0, item)
+            self._map_table.setItem(row, 1, QTableWidgetItem(info.get("author", "")))
+            heat = QTableWidgetItem(str(info.get("heat", 0)))
+            heat.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            self._map_table.setItem(row, 2, heat)
 
     def _on_map_selected(self):
-        selected = self.map_table.selectedItems()
-        if not selected:
-            self.selected_map = None
-            self.btn_launch.setEnabled(False)
+        sel = self._map_table.selectedItems()
+        if not sel:
             return
-
-        row = selected[0].row()
-        map_id = self.map_table.item(row, 0).data(Qt.ItemDataRole.UserRole)
+        row = sel[0].row()
+        map_id = self._map_table.item(row, 0).data(Qt.ItemDataRole.UserRole)
         self.selected_map = map_id
-        self.btn_launch.setEnabled(True)
+        self._launch_btn.setEnabled(True)
 
-        map_offset = map_id - 10000
-
-        # 解析 .map 文件获取动态选项和详细信息
+        # 解析 .map
         map_path = self.game_dir / "map" / f"{map_id}.map"
         parsed = MapOptionParser.parse(map_path)
         game_opts = MapOptionParser.get_game_options(parsed) if parsed else []
         player_num = parsed["player_num"] if parsed else 1
-
-        # 缓存解析结果
         self._parsed_map_options = game_opts
         self._parsed_player_num = player_num
 
-        # 更新缩略图
-        thumb_data = MapOptionParser.extract_thumbnail(map_path)
-        if thumb_data:
-            pixmap = QPixmap()
-            pixmap.loadFromData(thumb_data, "BMP")
-            if not pixmap.isNull():
-                scaled = pixmap.scaled(
-                    self.thumbnail_label.size(),
-                    Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation
-                )
-                self.thumbnail_label.setPixmap(scaled)
+        # 缩略图
+        thumb = MapOptionParser.extract_thumbnail(map_path)
+        if thumb:
+            pix = QPixmap()
+            pix.loadFromData(thumb, "BMP")
+            if not pix.isNull():
+                self._thumb.setPixmap(pix.scaled(100, 100, Qt.AspectRatioMode.KeepAspectRatio))
             else:
-                self.thumbnail_label.setText("预览加载失败")
+                self._thumb.setText("ERR")
         else:
-            self.thumbnail_label.setText("无预览")
+            self._thumb.setText("N/A")
 
-        # 更新地图详细信息
-        info_text_parts = [f"<b>地图ID:</b> {map_id}"]
-        map_name = MAP_INFO.get(map_id, {}).get("name", "未知")
-        info_text_parts.append(f"<b>名称:</b> {map_name}")
-        if parsed:
-            if parsed.get("chn_name"):
-                info_text_parts.append(f"<b>中文名:</b> {parsed['chn_name']}")
-            if parsed.get("info"):
-                info_text_parts.append(f"<b>描述:</b> {parsed['info']}")
-            if parsed.get("player_num"):
-                info_text_parts.append(f"<b>玩家数:</b> {parsed['player_num']}")
-            if parsed.get("player_mode"):
-                info_text_parts.append(f"<b>模式:</b> {parsed['player_mode']}")
-            vip = parsed.get("vip_info", {})
-            if vip.get("sponsor"):
-                info_text_parts.append(f"<b>赞助:</b> {vip['sponsor']}")
-            if vip.get("author"):
-                info_text_parts.append(f"<b>作者:</b> {vip['author']}")
-            if vip.get("qq_group"):
-                info_text_parts.append(f"<b>QQ群:</b> {vip['qq_group']}")
-        self.map_detail_label.setText("<br>".join(info_text_parts))
+        # 信息
+        parts = [f"ID: {map_id}"]
+        if MAP_INFO.get(map_id, {}).get("name"):
+            parts.append(f"名称: {MAP_INFO[map_id]['name']}")
+        if parsed and parsed.get("chn_name"):
+            parts.append(f"中文: {parsed['chn_name']}")
+        if parsed and parsed.get("info"):
+            parts.append(f"描述: {parsed['info']}")
+        self._info_text.setText("\n".join(parts))
 
-        # 清除旧选项控件
-        while self.options_grid.count():
-            item = self.options_grid.takeAt(0)
+        # 重建选项
+        while self._opt_grid.count():
+            item = self._opt_grid.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
-
-        # 动态创建选项下拉框
-        self.option_controls = []
-        for i, opt in enumerate(game_opts):
-            row, col = divmod(i, 2)
+        self._opt_widgets = []
+        for i, opt in enumerate(game_opts[:6]):
+            r, c = divmod(i, 2)
             lbl = QLabel(f"{opt['name']}:")
-            combo = QComboBox()
+            cmb = QComboBox()
             for idx, val in enumerate(opt["values"]):
-                combo.addItem(val, idx)
-            combo.setCurrentIndex(opt["default_index"])
-            combo.currentIndexChanged.connect(lambda idx, idx_opt=i: self._on_option_changed(idx_opt))
-            self.options_grid.addWidget(lbl, row, col * 2)
-            self.options_grid.addWidget(combo, row, col * 2 + 1)
-            self.option_controls.append(combo)
+                cmb.addItem(val, idx)
+            cmb.setCurrentIndex(opt["default_index"])
+            cmb.currentIndexChanged.connect(lambda idx, i=i: self._on_opt_changed(i))
+            self._opt_grid.addWidget(lbl, r, c * 2)
+            self._opt_grid.addWidget(cmb, r, c * 2 + 1)
+            self._opt_widgets.append(cmb)
 
-        # 更新玩家选项
-        self.player_combo.clear()
+        # 玩家数
+        self._player_num_combo.clear()
         for i in range(1, player_num + 1):
-            self.player_combo.addItem(f"玩家{i}", i - 1)
-        self.player_combo.setCurrentIndex(0)
+            self._player_num_combo.addItem(f"玩家{i}", i - 1)
 
-        # 确保 current_options 包含该地图设置
-        default_vals = [opt["default_index"] for opt in game_opts] + [-1] * (10 - len(game_opts)) + [0]
-        if map_offset not in self.current_options:
-            self.current_options[map_offset] = default_vals
-        else:
-            # 如果已有设置但选项数量不匹配，重新初始化
-            if len(self.current_options[map_offset]) != 11:
-                self.current_options[map_offset] = default_vals
+        self._status(f"已选择: {MAP_INFO.get(map_id, {}).get('name', map_id)} ({map_id})")
 
-        info = MAP_INFO.get(map_id, {})
-        self.statusbar.showMessage(f"已选择: {info.get('name', '地图')} ({map_id})")
+    def _on_opt_changed(self, index: int):
+        pass  # options stored in combo widgets directly
 
-    def _on_option_changed(self, index):
-        map_offset = self.selected_map - 10000 if self.selected_map else 0
-        if map_offset not in self.current_options:
-            game_opts = getattr(self, '_parsed_map_options', [])
-            default_vals = [opt["default_index"] for opt in game_opts] + [-1] * (10 - len(game_opts)) + [0]
-            self.current_options[map_offset] = default_vals
-
-        combo = self.option_controls[index]
-        self.current_options[map_offset][index] = combo.currentData()
+    def _on_player_changed(self, index: int):
+        pass
 
     def _choose_game_dir(self):
         path = QFileDialog.getExistingDirectory(self, "选择游戏目录", str(self.game_dir))
         if path:
             self.game_dir = Path(path)
-            self.dir_label.setText(f"目录: {self.game_dir}")
+            self._dir_label.setText(str(self.game_dir))
 
-    def _join_qq_group(self):
-        clipboard = QApplication.clipboard()
-        clipboard.setText(QQ_GROUP)
-        try:
-            webbrowser.open(f"tencent://groupwpa/?subcmd=all&param={QQ_GROUP}")
-        except Exception:
-            pass
-        QMessageBox.information(self, "加入QQ群", f"QQ群号: {QQ_GROUP}\n已复制到剪贴板，请手动添加。")
-
-    def _open_sponsor_dialog(self):
-        dlg = SponsorSettingsDialog(self, self.vip_settings)
-        if dlg.exec() == QDialog.DialogCode.Accepted:
-            self.vip_settings = dlg.get_vip_settings()
-            enabled = sum(1 for v in self.vip_settings.values() if v > 0)
-            self.statusbar.showMessage(f"赞助设置已保存: 已启用 {enabled} 项")
-            # 同步到主界面的 checkbox/combo
-            for name, setting in self.vip_settings.items():
-                cb = self.vip_checkboxes.get(name)
-                combo = self.vip_type_combos.get(name)
-                if cb and combo:
-                    cb.blockSignals(True)
-                    combo.blockSignals(True)
-                    cb.setChecked(setting > 0)
-                    if setting == 1:
-                        idx = combo.findData("permanent")
-                        if idx >= 0:
-                            combo.setCurrentIndex(idx)
-                    elif setting == 2:
-                        idx = combo.findData("monthly")
-                        if idx >= 0:
-                            combo.setCurrentIndex(idx)
-                    combo.blockSignals(False)
-                    cb.blockSignals(False)
-
-    def _get_current_options(self):
-        """获取当前地图的11个选项值 [opt0..opt9, player]"""
-        map_offset = self.selected_map - 10000 if self.selected_map else 0
-        stored = self.current_options.get(map_offset)
-        if stored and len(stored) == 11:
-            return stored
-        # 使用解析后的默认值
-        game_opts = getattr(self, '_parsed_map_options', [])
-        player_idx = self.player_combo.currentData() if hasattr(self, 'player_combo') else 0
-        opts = [opt["default_index"] for opt in game_opts] + [-1] * (10 - len(game_opts)) + [player_idx]
+    def _get_options_from_ui(self):
+        opts = []
+        for cmb in self._opt_widgets:
+            opts.append(cmb.currentData() if cmb.currentData() is not None else -1)
+        while len(opts) < 10:
+            opts.append(-1)
+        opts.append(self._player_num_combo.currentData() or 0)
         return opts
 
-    def _preview_config(self):
-        if self.selected_map is None:
-            QMessageBox.warning(self, "提示", "请先选择一张地图")
-            return
-        options = self._get_current_options()
-        lua = generate_config_lua(self.selected_map, options, game_dir=self.game_dir)
-        QMessageBox.information(self, "config.lua 预览", f"<pre>{lua}</pre>")
-
     def _launch_game(self):
-        """启动游戏 — 基于 SL10002 FinalLauncher 参考."""
-        if self.selected_map is None:
-            QMessageBox.warning(self, "提示", "请先选择一张地图")
+        if not self.selected_map:
             return
 
         map_id = int(self.selected_map)
         game_dir = Path(self.game_dir).absolute()
 
-        game_exe = game_dir / "core" / "game.exe"
-        if not game_exe.exists():
-            game_exe = game_dir / "game.exe"
-        if not game_exe.exists():
-            QMessageBox.critical(self, "启动错误", f"找不到游戏文件:\n{game_exe}")
+        if not (game_dir / "core" / "game.exe").exists() and not (game_dir / "game.exe").exists():
+            QMessageBox.critical(self, "启动错误", f"找不到 game.exe:\n{game_dir}")
             return
 
-        options = self._get_current_options()
+        options = self._get_options_from_ui()
 
         try:
-            bridge, diag_msg = launch_game(game_dir, map_id, options,
-                                          self.resolution_combo.currentIndex())
-            if bridge is None:
-                self._show_diag("启动失败", diag_msg, QMessageBox.Icon.Critical)
-                return
+            # 读取 LAN 设置
+            mode_btn = self._mode_group.checkedButton()
+            mode_map = {"单机本地": "single", "局域网主机": "host", "局域网客户端": "client"}
+            mode = "single"
+            for btn_text, mode_val in mode_map.items():
+                if mode_btn and btn_text in mode_btn.text():
+                    mode = mode_val
 
-            self._last_launch_pid = bridge.process_id
-            self._game_process_handle = bridge.process_handle
-
-            info = MAP_INFO.get(self.selected_map, {})
-            self.statusbar.showMessage(
-                f"游戏已启动: {info.get('name', str(map_id))} ({map_id}) | PID={bridge.process_id}"
+            bridge, msg = launch_game(
+                game_dir, map_id, options,
+                self._res_combo.currentIndex(),
+                mode=mode,
+                host_ip=self._host_ip.text().strip() or "127.0.0.1",
+                host_port=int(self._host_port.text().strip() or "29002"),
+                player_name=self._player_name.text().strip() or "Player1",
+                player_slot=self._player_slot.currentData() or 1,
             )
-
+            if bridge:
+                self._status(f"PID={bridge.process_id} | {MAP_INFO.get(map_id, {}).get('name', map_id)}")
+            else:
+                self._show_err("启动失败", msg)
         except Exception as e:
             import traceback
-            self._show_diag("启动异常", f"{e}\n\n{traceback.format_exc()}",
-                           QMessageBox.Icon.Critical)
+            self._show_err("异常", f"{e}\n\n{traceback.format_exc()}")
 
-    def _show_diag(self, title: str, message: str, icon):
-        """在可滚动对话框中展示诊断信息."""
+    def _show_err(self, title: str, msg: str):
         dlg = QDialog(self)
         dlg.setWindowTitle(title)
-        dlg.setMinimumSize(550, 400)
-
+        dlg.setMinimumSize(500, 300)
+        dlg.setStyleSheet("background: #121418; color: #e04040;")
         layout = QVBoxLayout(dlg)
-
-        if icon == QMessageBox.Icon.Critical:
-            layout.addWidget(QLabel("<b style='color:red;'>启动失败</b>"))
-        elif "失败" in message or "错误" in message:
-            layout.addWidget(QLabel("<b style='color:orange;'>诊断发现问题</b>"))
-        else:
-            layout.addWidget(QLabel("<b>启动诊断报告</b>"))
-
+        layout.addWidget(QLabel(f"<b style='color:#e04040;'>{title}</b>"))
+        from PyQt6.QtWidgets import QPlainTextEdit
         text = QPlainTextEdit()
         text.setReadOnly(True)
-        text.setPlainText(message)
-        text.setStyleSheet("font-family: Microsoft YaHei, Consolas, monospace; font-size: 12px;")
+        text.setPlainText(msg)
         layout.addWidget(text)
-
         btn = QPushButton("确定")
         btn.clicked.connect(dlg.accept)
         layout.addWidget(btn)
-
         dlg.exec()
-
-    def verify_launch(self):
-        """手动触发启动验证."""
-        pid = getattr(self, "_last_launch_pid", None)
-        if pid is None:
-            QMessageBox.information(self, "验证", "没有可验证的启动记录")
-            return
-
-        verifier = LogVerifier(self.game_dir)
-        log_dir = verifier.find_latest_log_dir()
-        if log_dir:
-            result = verifier.verify(self.selected_map, log_dir)
-            ok = "成功" if result["ok"] else "失败"
-            self._show_diag("启动验证结果",
-                f"状态: {ok}\n类型: {result.get('failure_kind', 'N/A')}\n"
-                f"AfterRun: {result.get('after_run_count', 0)}",
-                QMessageBox.Icon.Information)
-        else:
-            self._show_diag("启动验证结果", "未找到日志目录", QMessageBox.Icon.Warning)
-
-    def _check_version(self):
-        self.statusbar.showMessage("正在检查版本更新...")
-        self.version_thread = VersionCheckThread()
-        self.version_thread.result.connect(self._on_version_result)
-        self.version_thread.start()
-
-    def _on_version_result(self, success, data):
-        if success:
-            self.statusbar.showMessage("版本检查完成")
-            if "version" in data.lower() or "更新" in data:
-                pass
-        else:
-            self.statusbar.showMessage(f"版本检查失败: {data}")
 
 
 def main():
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
-
-    # 设置中文字体
-    font = QFont("Microsoft YaHei", 10)
-    app.setFont(font)
-
+    app.setFont(QFont("Microsoft YaHei", 10))
+    app.setStyleSheet(CSS)
     window = LauncherWindow()
     window.show()
     sys.exit(app.exec())

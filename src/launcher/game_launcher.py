@@ -260,8 +260,11 @@ class GameBridge:
 
 
 def launch_game(game_dir: Path, map_id: int, options: list,
-                resolution_index: int = 0) -> tuple:
-    bridge = GameBridge(game_dir, map_id, options, resolution_index)
+                resolution_index: int = 0, mode: str = "single",
+                host_ip: str = "127.0.0.1", host_port: int = 29002,
+                player_name: str = "Player1", player_slot: int = 1) -> tuple:
+    bridge = GameBridge(game_dir, map_id, options, resolution_index,
+                       player_slot, mode, host_ip, host_port, player_name)
     if not bridge.prepare():
         return None, "\n".join(bridge._prepare_errors)
     ok, err = bridge.launch()
