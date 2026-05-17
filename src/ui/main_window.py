@@ -27,9 +27,7 @@ from .sponsor_widgets import (
     SPONSOR_URLS, QQ_GROUP, VIP_PRODUCTS,
     VersionCheckThread, SponsorSettingsDialog,
 )
-from ..core.resource_control_service import ResourceControlService
-from ..launcher.game_launcher import GameBridge, launch_game, diagnose_launch
-from ..launcher.game_settings import update_game_setting
+from ..launcher.game_launcher import GameBridge, launch_game
 from ..launcher.log_verifier import LogVerifier
 
 
@@ -649,9 +647,17 @@ class LauncherWindow(QMainWindow):
             QMessageBox.information(self, "验证", "没有可验证的启动记录")
             return
 
-        diag = diagnose_launch(self.game_dir, pid, self.selected_map, timeout_seconds=5)
-        self._show_diag("启动验证结果", diag.get("user_message", str(diag)),
-                       QMessageBox.Icon.Information)
+        verifier = LogVerifier(self.game_dir)
+        log_dir = verifier.find_latest_log_dir()
+        if log_dir:
+            result = verifier.verify(self.selected_map, log_dir)
+            ok = "成功" if result["ok"] else "失败"
+            self._show_diag("启动验证结果",
+                f"状态: {ok}\n类型: {result.get('failure_kind', 'N/A')}\n"
+                f"AfterRun: {result.get('after_run_count', 0)}",
+                QMessageBox.Icon.Information)
+        else:
+            self._show_diag("启动验证结果", "未找到日志目录", QMessageBox.Icon.Warning)
 
     def _check_version(self):
         self.statusbar.showMessage("正在检查版本更新...")
