@@ -147,11 +147,32 @@ class HostService:
         plen = len(payload)
         self._log(f"[RECV] opcode=0x{opcode:04X} len={plen} head={payload[:min(plen,16)].hex()}")
 
-        # V49: 只记录，观察游戏发来的完整协议序列后再决定响应
         if opcode == 0x0259:
-            self._log(f"0x0259 payload (first 64): {payload[:min(plen,64)].hex()}")
-            # 暂时不回复，观察游戏是否会继续发送更多 opcode
-            # 如果游戏在等待特定响应，会在后续轮次加入
+            # 游戏首次请求 → 回复登录成功 + 玩家/房间/选项信息
+            login_payload = _build_login_result(self.player_slot)
+            conn.sendall(_build_packet(0x013A, login_payload))
+            self._log(f"0x0259 -> sent 0x013A login (0x34 bytes)")
+
+            # 发送玩家列表 (0x015A + 0x017A)
+            records = b""
+            for slot in range(24):
+                records += _build_player_record(slot, self.player_slot, self.player_name)
+            header = bytearray(8)
+            struct.pack_into("<I", header, 0, 24)
+            struct.pack_into("<H", header, 4, 0)
+            struct.pack_into("<H", header, 6, 0x6F)
+            conn.sendall(_build_packet(0x015A, bytes(header)))
+            conn.sendall(_build_packet(0x017A, records))
+            self._log(f"0x0259 -> sent 0x015A+0x017A player list")
+
+            # 发送房间信息 (0x0186)
+            room = bytearray(4)
+            struct.pack_into("<I", room, 0, 1)
+            conn.sendall(_build_packet(0x0186, bytes(room)))
+
+            # 发送空选项列表 (0x016E)
+            conn.sendall(_build_packet(0x016E, b"\x00\x00"))
+            self._log(f"0x0259 -> sent 0x0186+0x016E room+options")
 
         elif opcode == 0x017A:
             # 玩家列表请求 — 发送 24 个玩家记录

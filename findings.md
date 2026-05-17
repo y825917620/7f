@@ -23,3 +23,7 @@
 - AfterRun > 5 帧 (有时10帧) ✓
 - sanguo.o 加载: 有时成功有时失败 (取决于终端/GUI环境)
 - tab_interface nil: 终端环境出现, GUI exe 待验证
+
+## 第1轮自动测试 2026-05-17
+AfterRun=10 sanguo_o=False tab_nil=True
+file_fail=True net_conn=True
