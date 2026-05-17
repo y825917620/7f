@@ -1,46 +1,55 @@
-# === Game resources & map data (large files) ===
+# === 大文件目录 ===
 /data/
 /data_test/
-/game/
-
-# === Build artifacts & distribution ===
-/dist/
-/build/
 /cache/
-__pycache__/
+/build/
+/dist/
+/game/
+/assets/
+
+# === 二进制/构建产物 ===
+*.exe
 *.pyc
 *.pyo
+__pycache__/
+/__pycache__/
 
-# === Packaged executables ===
-*.exe
-
-# === Extracted/reverse-engineered content ===
-/神龙地图启动器.exe_extracted/
+# === 提取/反编译文件 ===
 /extracted_launcher/
+/神龙地图启动器.exe_extracted/
 /pycdc/
 /lua51_bin/
 /pyz_extracted.pyz
 /luac.out
 
-# === Logs and temp files ===
+# === 日志和缓存 ===
 /launcher_logs/
 *.log
-E:tmp_orig_edt2.lst
 
-# === Debug/temp analysis files ===
+# === 临时/调试文件 ===
 /file_list.txt
 /pyc_strings.txt
 /pyc_strings_utf8.txt
 /orig_head.txt
 /new_head.txt
-/launcher_refactoring_plan.html
-*tmp_orig_edt2*
+/orig_edt2.o
+/orig_config.lua
+/tmp_gpi_context.txt
+E:tmp_orig_edt2.lst
+/quick_test.py
+/test_now.py
+/bare_launch.py
+/test_launch_pythonw.py
+/test_qt_launch.py
+/launch_result.txt
+/qt_launch_result.txt
 
-# === IDE & OS ===
+# === IDE ===
 .vscode/
 .idea/
 *.swp
 *.swo
+
+# === OS ===
 Thumbs.db
 desktop.ini
-data_test*/

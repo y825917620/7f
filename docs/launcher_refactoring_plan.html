@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神龙地图启动器底层地图资源接入规划</title>
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --panel: #ffffff;
+            --ink: #1f2937;
+            --muted: #64748b;
+            --line: #d8e2ee;
+            --blue: #2563eb;
+            --green: #0f766e;
+            --amber: #b45309;
+            --red: #b91c1c;
+            --purple: #6d28d9;
+            --code: #eef2f7;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+            line-height: 1.65;
+        }
+
+        main {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 32px 20px 56px;
+        }
+
+        header, section {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 26px 30px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: 30px;
+            line-height: 1.25;
+            color: #0f172a;
+        }
+
+        h2 {
+            margin: 0 0 16px;
+            padding-left: 12px;
+            border-left: 4px solid var(--blue);
+            color: #1e40af;
+            font-size: 22px;
+        }
+
+        h3 {
+            margin: 18px 0 8px;
+            color: var(--green);
+            font-size: 17px;
+        }
+
+        p { margin: 8px 0; }
+        ul, ol { margin: 8px 0 0 22px; padding: 0; }
+        li { margin: 7px 0; }
+
+        code {
+            background: var(--code);
+            color: #be123c;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 0.92em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            background: #fff;
+        }
+
+        th, td {
+            border: 1px solid var(--line);
+            padding: 10px 12px;
+            vertical-align: top;
+            text-align: left;
+        }
+
+        th {
+            background: #eff6ff;
+            color: #1e3a8a;
+        }
+
+        .summary { color: var(--muted); font-size: 15px; }
+
+        .badge {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 3px 10px;
+            margin-right: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            vertical-align: middle;
+        }
+
+        .p1 { background: #fee2e2; color: var(--red); }
+        .p2 { background: #fef3c7; color: var(--amber); }
+        .p3 { background: #dbeafe; color: #1d4ed8; }
+        .research { background: #ede9fe; color: var(--purple); }
+        .done { background: #ccfbf1; color: var(--green); }
+
+        .finding {
+            border-left: 4px solid var(--red);
+            background: #fff7f7;
+            padding: 14px 16px;
+            margin: 14px 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .note {
+            border-left: 4px solid var(--amber);
+            background: #fffbeb;
+            padding: 14px 16px;
+            margin: 14px 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .diagram {
+            background: #f8fafc;
+            border: 1px dashed #b6c3d1;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+            font-family: Consolas, "Courier New", monospace;
+            white-space: pre-wrap;
+            color: #334155;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <header>
+        <h1>神龙地图启动器底层地图资源接入规划</h1>
+        <p class="summary">
+            目标不是继续盲猜游戏如何加载地图，而是把底层加载链路研究清楚，形成启动器自己的地图资源接入层。
+            启动器应能识别、校验、解包、挂载、传参并验证地图资源，让地图包成为可控输入，而不是依赖硬编码副作用。
+        </p>
+    </header>
+
+    <section>
+        <h2>一、当前审查证据</h2>
+
+        <div class="finding">
+            <p><span class="badge p1">P1</span><strong>正式启动代码仍把地图 ID 固定为 <code>10002</code>。</strong></p>
+            <p>
+                <code>src/launcher/game_launcher.py</code> 中 <code>mid_val = 10002</code> 被用于共享内存、命令行、匿名管道和命名管道。
+                UI 传入的 <code>selected_map</code> 没有参与底层启动链路。
+            </p>
+        </div>
+
+        <div class="finding">
+            <p><span class="badge p1">P1</span><strong>正式启动代码固定复制 <code>map/10002_dec.bin</code>。</strong></p>
+            <p>
+                当前只是把一个预解包文件复制到 <code>sl/map.map</code> 与 <code>core/sl/map.map</code>，没有从所选地图资源构建运行态地图包。
+            </p>
+        </div>
+
+        <div class="finding">
+            <p><span class="badge p1">P1</span><strong>游戏日志证明启动层和资源层没有真正接通。</strong></p>
+            <p>
+                本次日志显示 <code>设置读取地图名[10002]</code>、<code>begin load map[10002]</code>，随后 <code>读取地图[10002]失败</code>。
+                这说明游戏已经进入加载流程，但接收到的地图身份和运行态资源没有满足引擎要求。
+            </p>
+        </div>
+
+        <div class="finding">
+            <p><span class="badge p2">P2</span><strong>构建脚本引用不存在的 <code>src.core.sl_handler</code>。</strong></p>
+            <p>
+                这暗示项目曾经想做资源处理层，但当前源码里没有沉淀成正式模块。后续应以明确模块补齐，而不是散落在启动函数里。
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2>二、底层研究发现</h2>
+
+        <h3>2.1 地图资源文件分层</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>文件类型</th>
+                <th>观察结果</th>
+                <th>规划含义</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code>data/map/{id}.map</code></td>
+                <td>二进制头部样本以 <code>54 e9 0b 00 ...</code> 开始，体积通常小于解包后的运行包。</td>
+                <td>更像地图元数据、展示信息、选项、缩略图等来源，应由启动器解析并用于 UI 与配置生成。</td>
+            </tr>
+            <tr>
+                <td><code>data/map/{id}.sl</code></td>
+                <td>样本均可被 LZMA 解压，压缩头类似 <code>5d 00 00 40 00 ...</code>。</td>
+                <td>应作为运行态地图包主来源，由启动器解包并挂载给游戏。</td>
+            </tr>
+            <tr>
+                <td>解压后的地图包</td>
+                <td>样本统一以 <code>LuaRDGTM</code> 开头，<code>10002_dec.bin</code> 也是此类内容。</td>
+                <td>现有 <code>10002_dec.bin</code> 只是某一张图的已解包缓存，不应作为全局固定资源。</td>
+            </tr>
+            <tr>
+                <td><code>sl/map.map</code> / <code>core/sl/map.map</code></td>
+                <td>当前两处都被写入同一份解包内容。</td>
+                <td>这是一个候选挂载点，但需要通过游戏参数、日志和文件访问观察确认优先级。</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <h3>2.2 游戏层可见入口</h3>
+        <p>从 <code>game.exe</code>、<code>gpigame.dll</code>、核心脚本包和日志中可见以下关键字：</p>
+        <ul>
+            <li>命令行相关：<code>/mapfile=</code>、<code>/livemapfile=</code>、<code>/pipe=</code>、<code>/livepipe=</code>。</li>
+            <li>内存映射相关：<code>MemoryMapName=</code>、默认名 <code>sanguo</code>。</li>
+            <li>地图状态接口：<code>SetLoadMap</code>、<code>UpdateMapID</code>、<code>IsMapOK</code>、<code>GetGameCheckSum</code>、<code>GetCheckSumData</code>。</li>
+            <li>日志阶段：<code>GameInit</code>、<code>do [core/gpi.o] ok!</code>、<code>读取地图表格</code>、<code>begin load map</code>、<code>map is not ok</code>。</li>
+        </ul>
+
+        <div class="note">
+            <p>
+                结论：游戏可能支持不止一种地图输入方式。当前规划必须同时研究“文件挂载”“命令行指定”“共享内存/内存映射”“Lua 初始化接口”四条路径，
+                找到引擎真正认定地图有效的最小合同。
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2>三、目标架构</h2>
+        <p>将启动器改造成拥有独立地图资源接入层的结构，而不是把资源处理塞进 <code>launch_game</code>。</p>
+
+        <div class="diagram">UI 选择地图
+  -> MapCatalog            读取 .map 元数据、名称、选项、缩略图
+  -> MapPackageAnalyzer    识别 .sl 压缩格式、解包、校验 LuaRDGTM 运行包
+  -> MapLaunchManifest     生成一次启动所需的统一清单
+  -> ResourceMountManager  按证据选择挂载策略：文件 / 命令行 / 内存映射
+  -> GameBridge            统一写入命令行、共享内存、管道、环境变量
+  -> LogVerifier           读取新日志，确认地图 ID、地图包和加载状态一致</div>
+
+        <h3>核心模块规划</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>模块</th>
+                <th>职责</th>
+                <th>禁止事项</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code>MapCatalog</code></td>
+                <td>扫描 <code>data/map</code>，建立地图 ID 到 <code>.map/.sl</code> 的索引，标记缺失、重复、异常大小。</td>
+                <td>不启动游戏，不修改资源。</td>
+            </tr>
+            <tr>
+                <td><code>MapPackageAnalyzer</code></td>
+                <td>只读分析 <code>.sl</code>，验证 LZMA、解包头、解包大小、哈希、是否包含预期脚本/资源段。</td>
+                <td>不根据单张 10002 推断所有地图。</td>
+            </tr>
+            <tr>
+                <td><code>MapLaunchManifest</code></td>
+                <td>为一次启动生成结构化清单：地图 ID、源文件、解包文件、挂载点、校验值、选项、玩家数。</td>
+                <td>不保存 UI 状态，不直接调用 Win32。</td>
+            </tr>
+            <tr>
+                <td><code>ResourceMountManager</code></td>
+                <td>按研究结果执行挂载：写入 <code>sl/map.map</code>，必要时尝试 <code>/mapfile=</code> 或内存映射 <code>sanguo</code>。</td>
+                <td>不硬编码 <code>10002</code>，不吞掉错误。</td>
+            </tr>
+            <tr>
+                <td><code>GameBridge</code></td>
+                <td>统一向游戏注入地图 ID：命令行、共享内存、匿名管道、命名管道必须来自同一份 manifest。</td>
+                <td>不自行选择地图，不读取 UI 控件。</td>
+            </tr>
+            <tr>
+                <td><code>LogVerifier</code></td>
+                <td>启动后解析最新日志，确认 <code>设置读取地图名</code>、<code>begin load map</code>、错误信息和 manifest 一致。</td>
+                <td>不把“启动进程成功”误判为“地图加载成功”。</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>四、游戏资源与地图资源完全可控化</h2>
+        <p>
+            本阶段目标是把启动器从“调用游戏”升级为“资源控制平台”。游戏引擎、公共资源、地图资源、编辑缓存、运行态挂载包必须彻底分层，
+            后续才能安全修改游戏内资源、直接编辑地图资源，并把修改后的资源重新接入启动流程。
+        </p>
+
+        <h3>4.1 资源分层模型</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>层级</th>
+                <th>建议目录</th>
+                <th>职责</th>
+                <th>是否允许编辑</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>游戏引擎层</td>
+                <td><code>game_runtime/core</code></td>
+                <td><code>game.exe</code>、<code>gpigame.dll</code>、基础 DLL、核心运行文件。</td>
+                <td>默认只读。除非明确进入引擎补丁模式。</td>
+            </tr>
+            <tr>
+                <td>公共游戏资源层</td>
+                <td><code>game_assets/base</code></td>
+                <td><code>resource/sanguo</code>、公共模型、贴图、图标、音效、字体等。</td>
+                <td>允许通过资源编辑器创建覆盖版本，不直接改原件。</td>
+            </tr>
+            <tr>
+                <td>原始地图库层</td>
+                <td><code>maps/source/{map_id}</code></td>
+                <td>保存原始 <code>{map_id}.map</code>、<code>{map_id}.sl</code>、原始哈希、来源信息。</td>
+                <td>只读。作为可恢复基线。</td>
+            </tr>
+            <tr>
+                <td>地图解包工作区</td>
+                <td><code>maps/workspace/{map_id}</code></td>
+                <td>解包后的 <code>LuaRDGTM</code> 内容、脚本、资源段、索引表、可编辑文件树。</td>
+                <td>允许编辑。所有修改先进入工作区。</td>
+            </tr>
+            <tr>
+                <td>覆盖补丁层</td>
+                <td><code>mods/{mod_id}</code></td>
+                <td>保存对公共资源或地图资源的覆盖文件、Lua patch、配置 patch。</td>
+                <td>允许编辑。支持启用/禁用。</td>
+            </tr>
+            <tr>
+                <td>运行态挂载层</td>
+                <td><code>cache/launch/{session_id}</code></td>
+                <td>一次启动生成的最终地图包、资源覆盖结果、manifest、日志快照。</td>
+                <td>自动生成，不手动编辑。</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <h3>4.2 Resource Manifest 作为唯一真实来源</h3>
+        <p>后续所有资源操作都必须围绕结构化清单，不再依赖散乱文件名和硬编码路径。</p>
+        <ul>
+            <li><code>game_manifest.json</code>：记录游戏运行时版本、核心文件哈希、公共资源根目录。</li>
+            <li><code>map_manifest.json</code>：记录地图 ID、地图名、原始 <code>.map/.sl</code>、解包哈希、可编辑段列表。</li>
+            <li><code>mod_manifest.json</code>：记录资源覆盖、脚本 patch、依赖地图、兼容游戏版本。</li>
+            <li><code>launch_manifest.json</code>：记录一次启动最终使用的游戏版本、地图版本、mod 列表、挂载策略、校验值。</li>
+        </ul>
+
+        <h3>4.3 地图包解包、编辑、重打包链路</h3>
+        <ol>
+            <li><strong>Import：</strong>导入 <code>{map_id}.map</code> 与 <code>{map_id}.sl</code>，计算原始哈希，写入 source 层。</li>
+            <li><strong>Unpack：</strong>解压 <code>.sl</code> 得到 <code>LuaRDGTM</code> 运行包，解析段表、脚本名、资源名、偏移、大小。</li>
+            <li><strong>Normalize：</strong>将可识别段转换为工作区文件树，例如 Lua 脚本、模型引用、图标、配置表、地图描述。</li>
+            <li><strong>Edit：</strong>通过启动器编辑工作区内容，保留修改记录和 diff，不直接覆盖 source。</li>
+            <li><strong>Validate：</strong>检查 Lua 语法、资源引用、缺失文件、段大小、编码、路径大小写。</li>
+            <li><strong>Pack：</strong>从工作区重新生成 <code>LuaRDGTM</code> 运行包，并按游戏要求重新压缩为可挂载地图包。</li>
+            <li><strong>Mount：</strong>通过 manifest 把重打包结果接入启动流程。</li>
+        </ol>
+
+        <h3>4.4 公共游戏资源可编辑链路</h3>
+        <ol>
+            <li>扫描 <code>resource/sanguo</code>，建立模型、贴图、图标、音效、UI 素材索引。</li>
+            <li>为每个资源记录路径、大小、格式、哈希、被哪些地图或脚本引用。</li>
+            <li>编辑公共资源时不修改 base 原件，而是在 <code>mods/{mod_id}</code> 中创建覆盖文件。</li>
+            <li>启动前由 <code>ResourceOverlayResolver</code> 合成“base + mod + map override”的最终资源视图。</li>
+            <li>如果游戏只支持物理目录读取，则运行态挂载层负责生成临时覆盖目录或临时替换，并在 manifest 中记录。</li>
+        </ol>
+
+        <h3>4.5 资源编辑器能力规划</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>编辑对象</th>
+                <th>一期能力</th>
+                <th>后续能力</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Lua 脚本</td>
+                <td>查看、搜索、语法校验、只读引用跳转。</td>
+                <td>安全编辑、diff、回滚、重打包。</td>
+            </tr>
+            <tr>
+                <td>地图选项</td>
+                <td>解析 <code>#T#</code> 选项、默认值、玩家数。</td>
+                <td>可视化编辑选项并重新写入地图包。</td>
+            </tr>
+            <tr>
+                <td>贴图/图标</td>
+                <td>预览 <code>bmp/dds/tga</code>，建立引用索引。</td>
+                <td>替换资源、格式转换、生成 mod 覆盖。</td>
+            </tr>
+            <tr>
+                <td>模型/动画</td>
+                <td>列出 <code>apm/lmo/caf</code> 文件和引用关系。</td>
+                <td>替换模型、检查缺失贴图、预览基础信息。</td>
+            </tr>
+            <tr>
+                <td>地图包整体</td>
+                <td>解包、哈希、结构浏览、挂载测试。</td>
+                <td>重打包、版本管理、发布导出。</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <h3>4.6 可控资源的安全机制</h3>
+        <ul>
+            <li>所有原始资源进入 <code>source/base</code> 后只读保存，任何编辑都走 workspace 或 mod。</li>
+            <li>每次编辑生成版本记录，可回滚到任意历史版本。</li>
+            <li>每次启动生成独立 <code>launch_manifest.json</code>，保证问题能追踪到具体资源版本。</li>
+            <li>重打包前必须通过资源引用校验，避免游戏启动后才发现缺贴图、缺脚本、缺模型。</li>
+            <li>支持“干运行”：只生成最终挂载包和校验报告，不启动游戏。</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>五、底层研究路线</h2>
+
+        <h3>阶段 A：建立事实基线</h3>
+        <ol>
+            <li>抽样至少 10 张地图，记录 <code>.map</code> 大小、<code>.sl</code> 大小、解包大小、头部、哈希和解包结果。</li>
+            <li>确认所有 <code>.sl</code> 是否都能 LZMA 解包；对失败样本单独分类，避免一个算法覆盖不了所有地图。</li>
+            <li>确认 <code>LuaRDGTM</code> 之后的结构：段数量、偏移表、内嵌脚本名、资源名、校验字段。</li>
+            <li>建立 <code>docs/map_resource_format.md</code>，只记录已证实字段，未知字段标记为 unknown，不猜含义。</li>
+        </ol>
+
+        <h3>阶段 B：定位游戏真实加载合同</h3>
+        <ol>
+            <li>整理 <code>game.exe</code> 支持的命令行参数，重点验证 <code>/mapfile=</code>、<code>/livemapfile=</code> 是否可替代 <code>sl/map.map</code>。</li>
+            <li>验证 <code>MemoryMapName=sanguo</code> 的含义：是地图包内存映射、直播/编辑器通道，还是兼容入口。</li>
+            <li>观察游戏启动时实际读取哪些文件：<code>sl/map.map</code>、<code>core/sl/map.map</code>、<code>map/{id}.map</code>、<code>map/{id}.sl</code>。</li>
+            <li>梳理 <code>SetLoadMap</code>、<code>UpdateMapID</code>、<code>IsMapOK</code> 在日志中的先后顺序，确认失败点位于“包读取”“校验”“Lua 初始化”哪一层。</li>
+        </ol>
+
+        <h3>阶段 C：设计可控挂载策略</h3>
+        <ol>
+            <li><strong>文件挂载策略：</strong>启动器解包 <code>{id}.sl</code> 到受控缓存，再原子替换 <code>sl/map.map</code> 与必要的镜像路径。</li>
+            <li><strong>参数挂载策略：</strong>如果 <code>/mapfile=</code> 被证实有效，则优先传入缓存文件绝对路径，减少覆盖游戏目录文件。</li>
+            <li><strong>内存映射策略：</strong>如果 <code>MemoryMapName=sanguo</code> 被证实是地图包入口，再实现映射写入；未证实前不作为默认方案。</li>
+            <li><strong>回滚策略：</strong>启动失败时保留 manifest 和日志，不静默恢复现场，便于定位。</li>
+        </ol>
+
+        <h3>阶段 D：把地图资源正式接入启动器</h3>
+        <ol>
+            <li>UI 选择地图后，不再只传一个数字，而是生成 <code>MapLaunchManifest</code>。</li>
+            <li>启动按钮只在 manifest 校验通过后可用；资源缺失或解包失败直接在 UI 提示。</li>
+            <li>启动前输出本次 manifest 到 <code>data/launcher_logs</code>，包括地图 ID、源路径、解包路径、哈希、挂载策略。</li>
+            <li>游戏启动后由 <code>LogVerifier</code> 自动读取新日志，判断是否真正加载到所选地图。</li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>六、实验矩阵</h2>
+        <p>所有实验都应是可复现、可记录、可回滚的，不使用旧测试脚本作为依据。</p>
+        <table>
+            <thead>
+            <tr>
+                <th>实验</th>
+                <th>变量</th>
+                <th>观测项</th>
+                <th>通过标准</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>文件挂载验证</td>
+                <td>只替换 <code>sl/map.map</code>，地图 ID 与所选一致。</td>
+                <td><code>init.log</code> 的地图名、<code>begin load map</code>、<code>error.log</code>。</td>
+                <td>日志地图 ID 与 manifest 一致，且不出现读取地图失败。</td>
+            </tr>
+            <tr>
+                <td>镜像路径验证</td>
+                <td>分别写入 <code>sl/map.map</code>、<code>core/sl/map.map</code>、两者同时写入。</td>
+                <td>游戏是否读取不同路径，失败信息是否变化。</td>
+                <td>确认最小必要挂载路径。</td>
+            </tr>
+            <tr>
+                <td>命令行 <code>/mapfile=</code> 验证</td>
+                <td>传入缓存地图包路径，不覆盖 <code>sl/map.map</code>。</td>
+                <td>日志是否显示对应文件或地图 ID，是否进入地图加载。</td>
+                <td>确认参数是否可作为正式挂载入口。</td>
+            </tr>
+            <tr>
+                <td>内存映射验证</td>
+                <td>创建 <code>sanguo</code> 映射并写入地图包，控制是否同时存在文件挂载。</td>
+                <td>日志、读取结果、是否需要文件 fallback。</td>
+                <td>只有证实有效才纳入默认策略。</td>
+            </tr>
+            <tr>
+                <td>校验链验证</td>
+                <td>比较不同地图解包哈希与 <code>GetGameCheckSum</code> / <code>GetCheckSumData</code> 相关日志。</td>
+                <td>校验失败是否导致 <code>map is not ok</code> 或读取失败。</td>
+                <td>明确 checksum 是否需要启动器预计算或传递。</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>七、编码实施计划</h2>
+
+        <h3>第 1 步：资源格式研究产物先落地</h3>
+        <ul>
+            <li>新增 <code>docs/map_resource_format.md</code>：记录 <code>.map</code>、<code>.sl</code>、解包运行包的已知结构。</li>
+            <li>新增 <code>docs/game_launch_contract.md</code>：记录游戏启动参数、共享内存名、管道数据结构、日志阶段。</li>
+            <li>新增 <code>docs/map_mounting_decisions.md</code>：每个挂载策略的证据、结论和废弃原因。</li>
+        </ul>
+
+        <h3>第 2 步：实现只读索引与分析层</h3>
+        <ul>
+            <li><code>MapCatalog</code> 扫描地图库，输出地图资源完整性状态。</li>
+            <li><code>MapPackageAnalyzer</code> 只读解包并验证 <code>LuaRDGTM</code> 头，不写游戏目录。</li>
+            <li>为异常地图生成诊断信息：缺 <code>.sl</code>、缺 <code>.map</code>、解包失败、头部异常、体积异常。</li>
+        </ul>
+
+        <h3>第 3 步：建立资源可控化工作区</h3>
+        <ul>
+            <li>实现 <code>maps/source</code>、<code>maps/workspace</code>、<code>mods</code>、<code>cache/launch</code> 的目录规范。</li>
+            <li>导入地图时自动生成 <code>map_manifest.json</code>，并保留原始资源哈希。</li>
+            <li>解包地图时只写入 workspace，不污染游戏运行目录。</li>
+            <li>为公共游戏资源建立只读 base 索引，并预留 mod 覆盖层。</li>
+        </ul>
+
+        <h3>第 4 步：实现 manifest 驱动的启动</h3>
+        <ul>
+            <li>用 <code>MapLaunchManifest</code> 替代散乱参数传递。</li>
+            <li>manifest 作为唯一来源驱动：地图 ID、资源路径、解包路径、挂载策略、配置选项。</li>
+            <li><code>launch_game</code> 不再自己判断地图资源，只消费 manifest。</li>
+        </ul>
+
+        <h3>第 5 步：接入挂载策略</h3>
+        <ul>
+            <li>先实现已证实的文件挂载策略。</li>
+            <li>再根据阶段 B 的证据决定是否加入 <code>/mapfile=</code> 策略。</li>
+            <li>内存映射策略必须等证据充分后再实现，避免把未知机制变成新依赖。</li>
+        </ul>
+
+        <h3>第 6 步：启动链路统一注入</h3>
+        <ul>
+            <li>命令行地图 ID、共享内存地图 ID、匿名管道地图 ID、命名管道地图 ID 全部来自 manifest。</li>
+            <li>彻底移除 <code>mid_val = 10002</code> 和固定 <code>10002_dec.bin</code>。</li>
+            <li>资源准备失败时不创建游戏进程。</li>
+        </ul>
+
+        <h3>第 7 步：日志闭环验证</h3>
+        <ul>
+            <li>启动前记录 manifest。</li>
+            <li>启动后解析最新 <code>init.log</code>、<code>error.log</code>、<code>log_mgr</code>。</li>
+            <li>UI 显示真实状态：进程已启动、地图加载中、地图加载成功、地图读取失败、Lua 初始化失败。</li>
+        </ul>
+
+        <h3>第 8 步：资源编辑与重打包能力</h3>
+        <ul>
+            <li>先实现只读浏览和引用索引，再开放编辑。</li>
+            <li>编辑能力必须先支持 diff、回滚、校验，再允许重打包。</li>
+            <li>重打包结果必须通过独立 manifest 接入启动，不覆盖原始地图。</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>八、验收标准</h2>
+        <ul>
+            <li><span class="badge done">必须</span> 任意选择 10002 之外的地图时，日志中的 <code>设置读取地图名</code> 与 UI 选择一致。</li>
+            <li><span class="badge done">必须</span> 启动器能解释本次使用了哪个地图源文件、哪个解包文件、哪个挂载策略。</li>
+            <li><span class="badge done">必须</span> 所有地图资源处理逻辑集中在资源接入层，不散落在 UI 或 Win32 启动代码里。</li>
+            <li><span class="badge done">必须</span> 缺资源、解包失败、挂载失败、地图校验失败都有明确错误信息。</li>
+            <li><span class="badge done">必须</span> 原始游戏资源和原始地图资源保持只读，所有修改都进入 workspace 或 mod 层。</li>
+            <li><span class="badge done">必须</span> 启动器能生成并读取 <code>game_manifest.json</code>、<code>map_manifest.json</code>、<code>launch_manifest.json</code>。</li>
+            <li><span class="badge done">必须</span> 至少一张地图可以完成“导入 -> 解包 -> 生成工作区 -> 重新挂载启动”的闭环。</li>
+            <li><span class="badge done">建议</span> 至少一个公共资源覆盖 mod 可以被 manifest 挂载，并可随时禁用恢复原状。</li>
+            <li><span class="badge done">必须</span> 至少 3 张不同体积地图完成启动验证，包括 10002 和两张非 10002。</li>
+            <li><span class="badge done">建议</span> 至少 10 张地图完成离线解包与 manifest 生成验证。</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>九、边界与优先级</h2>
+        <div class="note">
+            <p>
+                当前阶段只做本地地图资源接入和启动稳定性。联机、赞助/VIP、外部服务模拟、权限绕过等内容不进入本轮规划。
+                底层研究只服务于让本地已有地图资源被启动器正确、可控、可验证地加载。
+            </p>
+        </div>
+        <ol>
+            <li>最高优先级：资源分层、manifest、地图资源接入层、统一地图 ID、日志验证。</li>
+            <li>第二优先级：地图解包工作区、公共资源索引、mod 覆盖层。</li>
+            <li>第三优先级：配置生成与地图选项联动。</li>
+            <li>第四优先级：打包清理、UI 状态展示、错误诊断体验。</li>
+            <li>暂缓：联机、商业权限相关功能、界面大改。</li>
+        </ol>
+    </section>
+</main>
+</body>
+</html>
