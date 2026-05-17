@@ -44,3 +44,8 @@
 - file_dual_mount 双挂载点确认存在且内容正确
 - 更新 docs/game_launch_contract.md + map_mounting_decisions.md
 - 17 tests passing, 10-map dry run OK
+
+## 2026-05-17 地图加载与 LAN 完整规划
+- 新增 docs/superpowers/plans/2026-05-17-map-loading-lan-implementation.md
+- 规划重点：先冻结启动契约，再实现 manifest 驱动地图加载，最后接入 LAN 房间、游戏 HostService、UI 和打包验证
+- 当前发现：现有文档、测试和代码对默认挂载/启动契约存在冲突，必须作为 P0 先处理

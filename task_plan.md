@@ -1,47 +1,59 @@
-# 基于原版反编译成果的启动器改造计划
+# SL10002 启动器改造计划 (v2 — 基于参考包)
 
-## 核心发现
+## 目标
+完全对齐 `SL10002 FinalLauncher V45` C# 参考实现，实现单机/局域网联机启动器。
 
-原启动器是 **原生 C++ MFC 程序**，不是 Python。关键差异：
+## 核心架构（来自参考包）
+```
+启动器 → 文件准备 (.sl拆包+Blowfish解密 → map/{id}/+.o)
+       → 启动 HostService (TCP 29002)
+       → 构建 PlatformBlock (0x435 bytes SHM)
+       → CreateProcess(game.exe /mapfile={id} MemoryMapName={custom})
+       → HostService 响应游戏会话协议
+       → 退出时生成 SL10002_ONE_LOG.txt
+```
 
-| 项 | 原版 C++ | 我们的 Python |
-|------|----------|--------------|
-| 命令行 | `game.exe MemoryMapName=sanguo` | `game.exe 10002` |
-| SHM 大小 | `7fgame_game_client_login` = **4 bytes** | 256 bytes |
-| 地图数据传输 | **MemoryMapName=sanguo** 内存映射 | `sl/map.map` 文件 |
-| 管道/NUL | 无 | 有（当前版本可能无） |
-| 配置文件 | `login.ini` | `GameSetting.inf` |
-| edt2.o | `GetMapOptionDisplay() return 0` | return 1 |
-| g_map_display | `= 0` | = 0 ✓ |
+## 实施阶段
 
-## 改造任务
+### 阶段 1: 文件准备 (已验证)
+- [x] .sl 拆包: LZMA_ALONE 解压
+- [x] Payload 解密: Blowfish/ECB, key="DEFAULT_KEY\0"
+- [x] 写入 map/{id}/{id}.map + map/{id}/{id}.o + map/sanguo/
+- [x] config.lua 生成 (SrvScriptInfo/load_rolesdk hooks)
+- [x] edt2.o + map.o 编译
+- [ ] 修复: 所有地图 (非仅10002) 的加载方式统一
 
-### 1. 命令行添加 MemoryMapName=sanguo [P0]
-   原版: `"core\game.exe" MemoryMapName=sanguo`
-   修改: `_build_cmdline()` 追加 ` MemoryMapName=sanguo`
+### 阶段 2: HostService (已验证)
+- [x] TCP 29002 监听
+- [x] 0x013A 登录响应
+- [x] 0x015A/0x017A 玩家列表
+- [x] 0x0138 控制帧/心跳
+- [ ] 修复: 客户端模式连接到远程主机
 
-### 2. 创建 sanguo 共享内存，写入地图数据 [P0]
-   原版: `CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, size, "sanguo")`
-   修改: 在 GameBridge.launch() 中创建名为 "sanguo" 的内存映射，
-   将 LuaRDGTM 解压数据写入
+### 阶段 3: 进程启动 (已验证)
+- [x] PlatformBlock SHM (0x435 bytes)
+- [x] 双 SHM: "10002" + 自定义名
+- [x] 命令行: /mapfile={id} MemoryMapName={custom}
+- [x] CreateProcess: no pipe, no NUL, bInheritHandles=False
+- [x] 互斥体 7fxx_dgtm
 
-### 3. 修正 GetMapOptionDisplay 返回 0 [P1]
-   原版: `function GetMapOptionDisplay() return 0 end`
-   修改: config_generator.py
+### 阶段 4: UI
+- [x] 暗色工业风
+- [x] 地图列表 (名称+作者)
+- [x] 每地图独立选项解析
+- [x] 模式选择: 单机/主机/客户端
+- [ ] 修复: 启动按钮在 GUI 模式下实际生效
+- [ ] 修复: 日志输出到文件
 
-### 4. 移除 sl/map.map 创建 [P1]  
-   原版不创建此文件，游戏从 MemoryMapName=sanguo 读取
-   修改: ResourceMountManager
+### 阶段 5: LAN 房间
+- [ ] 主机创建房间: HostService 启动 + 广播/等待
+- [ ] 客户端加入: 连接主机 IP:29002
+- [ ] 主机控制地图设置
+- [ ] 客户端只可选玩家槽位
 
-### 5. 修正 SHM 大小 [P2]
-   原版: 7fgame_game_client_login = 4 bytes
-   修改: GameBridge
-
-### 6. 无管道/NUL [P2]
-   原版: dwFlags=0x1, bInheritHandles=FALSE
-   修改: 确认 GameBridge.launch()
-
-## 不纳入本轮
-- login.ini 配置（后续）
-- MFC 窗口/对话框
-- 赞助大使UI
+### 阶段 6: 验证
+- [ ] 终端测试启动成功
+- [ ] GUI exe 启动成功
+- [ ] AfterRun > 5 帧
+- [ ] sanguo.o 加载成功
+- [ ] 多地图测试 (非10002)
