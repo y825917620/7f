@@ -105,34 +105,32 @@ class HostService:
         conn.settimeout(30)
         buf = b""
         try:
-            # 发送登录成功
-            login_payload = _build_login_result(self.player_slot)
-            conn.sendall(_build_packet(0x013A, login_payload))
-            self._log(f"Sent login result (0x013A)")
-
+            self._log(f"Session started, waiting for game opcodes...")
             while self._running:
                 try:
                     data = conn.recv(4096)
                     if not data:
                         break
                     buf += data
+                    self._log(f"Received {len(data)} bytes, buffer={len(buf)}")
+
                     while len(buf) >= 4:
                         opcode = struct.unpack_from("<H", buf, 0)[0]
                         plen = struct.unpack_from("<H", buf, 2)[0]
                         total = 4 + plen
                         if len(buf) < total:
                             break
-                        # 处理并响应
-                        self._handle_opcode(conn, opcode, buf[4:total])
+                        payload = buf[4:total]
                         buf = buf[total:]
+                        self._handle_opcode(conn, opcode, payload)
+
                 except socket.timeout:
                     self._keep_counter += 1
-                    cf = _build_control_frame(0, 0, self._keep_counter)
-                    try:
-                        conn.sendall(_build_packet(0xFFFF, cf))
-                    except Exception:
-                        break
-                except Exception:
+                    continue
+                except ConnectionResetError:
+                    break
+                except Exception as e:
+                    self._log(f"Session error: {e}")
                     break
         except Exception as e:
             self._log(f"Session error: {e}")
@@ -144,8 +142,18 @@ class HostService:
             self._log("Game disconnected")
 
     def _handle_opcode(self, conn: socket.socket, opcode: int, payload: bytes):
-        """处理游戏发来的 opcode."""
-        if opcode == 0x017A:
+        """处理游戏发来的 opcode. 记录所有收到的 opcode."""
+        # V49: 记录所有收到的 opcode
+        plen = len(payload)
+        self._log(f"[RECV] opcode=0x{opcode:04X} len={plen} head={payload[:min(plen,16)].hex()}")
+
+        # V49: 只记录，观察游戏发来的完整协议序列后再决定响应
+        if opcode == 0x0259:
+            self._log(f"0x0259 payload (first 64): {payload[:min(plen,64)].hex()}")
+            # 暂时不回复，观察游戏是否会继续发送更多 opcode
+            # 如果游戏在等待特定响应，会在后续轮次加入
+
+        elif opcode == 0x017A:
             # 玩家列表请求 — 发送 24 个玩家记录
             records = b""
             for slot in range(24):

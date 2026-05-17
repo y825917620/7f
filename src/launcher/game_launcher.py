@@ -178,31 +178,44 @@ class GameBridge:
         return len(self._prepare_errors) == 0
 
     def launch(self) -> tuple:
-        """V49: 清端口 → HostService → 确认监听 → SHM → CreateProcess."""
+        """V49: 清端口 → HostService → 弹窗监控 → 确认监听 → SHM → CreateProcess."""
         # 0a. 清理旧进程和端口 (V49)
         try:
             import subprocess
-            # 杀旧 game.exe
             subprocess.run(["taskkill", "/F", "/IM", "game.exe"], capture_output=True, timeout=5)
-            # 释放端口 29002
             for line in subprocess.run(
                 ["netstat", "-ano"], capture_output=True, text=True, timeout=5
             ).stdout.splitlines():
                 if ":29002" in line and "LISTENING" in line:
-                    parts = line.strip().split()
-                    pid = parts[-1]
-                    subprocess.run(["taskkill", "/F", "/PID", pid], capture_output=True, timeout=3)
+                    subprocess.run(["taskkill", "/F", "/PID", line.strip().split()[-1]], capture_output=True, timeout=3)
         except Exception:
             pass
         time.sleep(0.5)
 
-        # 0b. 启动本地 HostService
+        # 0b. 启动弹窗监控线程 (模仿原版 _dialog_watcher_thread)
+        import threading
+        def _close_dialogs():
+            import ctypes as ct
+            u32 = ct.windll.user32
+            start = time.time()
+            titles = [b"LOG", b"Error", b"Fatal", b"Warning", b"Assertion"]
+            while time.time() - start < 120:
+                for t in titles:
+                    h = u32.FindWindowA(b"#32770", t)
+                    if h:
+                        u32.ShowWindow(h, 0)
+                        u32.PostMessageA(h, 0x0010, 0, 0)
+                time.sleep(0.15)
+
+        threading.Thread(target=_close_dialogs, daemon=True).start()
+
+        # 0c. 启动本地 HostService
         from .host_service import HostService
         self._host = HostService(self.player_slot, self.player_name)
         self._host.start()
         time.sleep(0.3)
 
-        # 0c. V49: 确认 TCP 监听成功
+        # 0d. V49: 确认 TCP 监听成功
         import socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(3)
