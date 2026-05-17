@@ -82,8 +82,16 @@ class ResourceMountManager:
         map_path.write_bytes(map_data)
         o_path.write_bytes(lua_payload)
 
+        # 同时写入 map/sanguo/ (游戏内部使用的名称)
+        sanguo_dir = self.game_dir / "map" / "sanguo"
+        sanguo_dir.mkdir(parents=True, exist_ok=True)
+        (sanguo_dir / "sanguo.map").write_bytes(map_data)
+        (sanguo_dir / "sanguo.o").write_bytes(lua_payload)
+
         manifest.unpacked_path = o_path
-        manifest.mount_points = [map_path, o_path]
+        manifest.mount_points = [map_path, o_path,
+                                 sanguo_dir / "sanguo.map",
+                                 sanguo_dir / "sanguo.o"]
         manifest.strategy = "sl_extract_decrypt"
         return manifest
 
