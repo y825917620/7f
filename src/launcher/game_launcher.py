@@ -9,6 +9,7 @@ import socket
 import threading
 import subprocess
 import time
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -27,6 +28,216 @@ def _find_luac(game_dir: Path) -> Optional[Path]:
         if c and c.exists():
             return c.resolve()
     return None
+
+
+def _mirror_sanguo_resources(game_dir: Path) -> Optional[str]:
+    src_root = game_dir / "resource" / "sanguo"
+    dst_root = game_dir / "core" / "resource" / "sanguo"
+    if not src_root.exists():
+        return None
+
+    copied = 0
+    for src in src_root.rglob("*"):
+        if not src.is_file():
+            continue
+        rel = src.relative_to(src_root)
+        dst = dst_root / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            if (not dst.exists()) or dst.stat().st_size != src.stat().st_size:
+                shutil.copy2(src, dst)
+                copied += 1
+        except Exception:
+            continue
+    return f"resource_mirror copied={copied}"
+
+
+def _looks_like_usable_dds(path: Path) -> bool:
+    try:
+        if not path.exists() or not path.is_file():
+            return False
+        if path.stat().st_size < 16384:
+            return False
+        with open(path, "rb") as f:
+            return f.read(4) == b"DDS "
+    except Exception:
+        return False
+
+
+def _read_tga_bgra(path: Path):
+    try:
+        if not path.exists():
+            return None
+        data = path.read_bytes()
+        if len(data) < 18:
+            return None
+
+        id_len = data[0]
+        color_map_type = data[1]
+        image_type = data[2]
+        if color_map_type != 0 or image_type != 2:
+            return None
+
+        width = data[12] | (data[13] << 8)
+        height = data[14] | (data[15] << 8)
+        bpp = data[16]
+        desc = data[17]
+        if width <= 0 or height <= 0:
+            return None
+        if bpp not in (24, 32):
+            return None
+
+        bytes_per_pixel = bpp // 8
+        off = 18 + id_len
+        need = width * height * bytes_per_pixel
+        if off < 0 or off + need > len(data):
+            return None
+
+        bgra = bytearray(width * height * 4)
+        top_origin = (desc & 0x20) != 0
+        for y in range(height):
+            src_y = y if top_origin else (height - 1 - y)
+            src_base = off + src_y * width * bytes_per_pixel
+            dst_base = y * width * 4
+            for x in range(width):
+                si = src_base + x * bytes_per_pixel
+                di = dst_base + x * 4
+                bgra[di + 0] = data[si + 0]
+                bgra[di + 1] = data[si + 1]
+                bgra[di + 2] = data[si + 2]
+                bgra[di + 3] = data[si + 3] if bytes_per_pixel == 4 else 255
+        return width, height, bytes(bgra)
+    except Exception:
+        return None
+
+
+def _write_dds_a8r8g8b8(path: Path, width: int, height: int, bgra: bytes) -> bool:
+    try:
+        if width <= 0 or height <= 0 or not bgra or len(bgra) < width * height * 4:
+            return False
+        header = bytearray(128)
+        header[0:4] = b"DDS "
+        struct.pack_into("<I", header, 4, 124)
+        struct.pack_into("<I", header, 8, 0x0002100F)    # CAPS|HEIGHT|WIDTH|PITCH|PIXELFORMAT
+        struct.pack_into("<I", header, 12, height)
+        struct.pack_into("<I", header, 16, width)
+        struct.pack_into("<I", header, 20, width * 4)
+        struct.pack_into("<I", header, 76, 32)
+        struct.pack_into("<I", header, 80, 0x00000041)   # RGB | ALPHAPIXELS
+        struct.pack_into("<I", header, 88, 32)
+        struct.pack_into("<I", header, 92, 0x00FF0000)   # R
+        struct.pack_into("<I", header, 96, 0x0000FF00)   # G
+        struct.pack_into("<I", header, 100, 0x000000FF)  # B
+        struct.pack_into("<I", header, 104, 0xFF000000)  # A
+        struct.pack_into("<I", header, 108, 0x00001000)  # DDSCAPS_TEXTURE
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "wb") as f:
+            f.write(header)
+            f.write(bgra[:width * height * 4])
+        return True
+    except Exception:
+        return False
+
+
+def _repair_ui_dds_from_tga(game_dir: Path) -> list[str]:
+    ui_dir = game_dir / "resource" / "sanguo" / "ui"
+    repaired = []
+    if not ui_dir.exists():
+        return repaired
+    for dds in sorted(ui_dir.glob("*.dds")):
+        if _looks_like_usable_dds(dds):
+            continue
+        tga = dds.with_suffix(".tga")
+        if not tga.exists():
+            tga = dds.with_suffix(".TGA")
+        parsed = _read_tga_bgra(tga)
+        if not parsed:
+            continue
+        width, height, bgra = parsed
+        if _write_dds_a8r8g8b8(dds, width, height, bgra):
+            repaired.append(dds.name)
+    return repaired
+
+
+def _ensure_effect_aliases(game_dir: Path) -> list[str]:
+    effect_dir = game_dir / "resource" / "sanguo" / "effect"
+    aliases = []
+    if not effect_dir.exists():
+        return aliases
+
+    alias_map = {
+        "zzfire11.tga": "yfire.tga",
+        "bomb05.tga": "bomb3002.TGA",
+        "tengman.tga": "tengman1.tga",
+    }
+    for dst_name, src_name in alias_map.items():
+        dst = effect_dir / dst_name
+        if dst.exists():
+            continue
+        src = effect_dir / src_name
+        if not src.exists():
+            continue
+        shutil.copy2(src, dst)
+        aliases.append(dst.name)
+    return aliases
+
+
+def _ensure_model_aliases(game_dir: Path) -> list[str]:
+    model_dir = game_dir / "resource" / "sanguo" / "model"
+    aliases = []
+    if not model_dir.exists():
+        return aliases
+
+    required = (
+        "CliffTransAAHL0.lmo",
+        "CliffTransAALH0.lmo",
+        "CliffTransAHLA0.lmo",
+        "CliffTransALHA0.lmo",
+        "CliffTransHAAL0.lmo",
+        "CliffTransHLAA0.lmo",
+        "CliffTransLAAH0.lmo",
+        "CliffTransLHAA0.lmo",
+    )
+    required_lower = {name.lower() for name in required}
+
+    src = None
+    for candidate in sorted(model_dir.glob("CliffTrans*.lmo")):
+        if candidate.name.lower() not in required_lower:
+            src = candidate
+            break
+    if src is None:
+        for candidate in sorted(model_dir.glob("*.lmo")):
+            src = candidate
+            break
+    if src is None:
+        return aliases
+
+    for name in required:
+        dst = model_dir / name
+        if dst.exists():
+            continue
+        shutil.copy2(src, dst)
+        aliases.append(dst.name)
+    return aliases
+
+
+def _ensure_terrain_aliases(game_dir: Path) -> list[str]:
+    terrain_dir = game_dir / "resource" / "sanguo" / "terrain"
+    aliases = []
+    if not terrain_dir.exists():
+        return aliases
+    for src in terrain_dir.glob("*.tga"):
+        stem = src.stem
+        if stem.endswith("_nor"):
+            continue
+        dst = terrain_dir / f"{stem}_nor.tga"
+        if dst.exists():
+            continue
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dst)
+        aliases.append(dst.name)
+    return aliases
 
 
 # === PlatformBlock SHM (匹配 C# BuildPlatformBlock) ===
@@ -103,6 +314,44 @@ def write_config_lua_v45(game_dir: Path, map_id: int, control_id: int = 1, optio
         "function GetMapOptionDisplay() return 1 end",
         "function SrvScriptInfo(a,b) return 1 end",
         "function load_rolesdk(mapid,data) return 1 end",
+        "local __sl_targets = {'map_init','GameEvent_MapInit','GameEventJoinGame','GameEvent_GameStart','GameEvent_StartGame','GameEvent_RunGameLogic','GameEvent_GameLogic','TgrMainTimer','CustomEventTimer','TriggerAddChaFromCoordinate','tgr_GetSideBirthPoint','GetSessionPlayerInfo','GetSessionPlayerInfoEx','AddCha','lua_sceAddCha','sceAddCha','lua_AddCha_New','lua_AddCha_NewEx','lua_AddCha_NewEx_Use_ContrlID','AddSceneObj','AddSceneObject','sceAddSceneObject','map_addchar','map_addsceneobj','player_station','player_mode_station','player_bar_station','tgr_map_init','tgr_maptab_init','map_init_0000','map_init_0004','map_init_allregion','lua_AddTimer','AddTimer','lua_EnableTimer','lua_EnableAllTimer'}",
+        "local __sl_wrapped = {}",
+        "local function __sl_args(...) local n=select('#',...); local t={}; for i=1,n do t[#t+1]=tostring(select(i,...)) end; return table.concat(t,',') end",
+        "local function __sl_addcha_log(m) pcall(function() local f=io.open('AddCha.log','a'); if f then f:write(os.date('%Y-%m-%d %H:%M:%S')..' '..tostring(m)..'\\n'); f:close() end end) end",
+        "local function __sl_wrap(name, fn)",
+        "  if type(fn)~='function' or __sl_wrapped[name] then return fn end",
+        "  __sl_wrapped[name]=true",
+        "  return function(...)",
+        "    local a=__sl_args(...)",
+        "    __sl_log('[CHAIN_BEGIN] '..name..' args='..a)",
+        "    if name=='AddCha' or name=='lua_sceAddCha' or name=='lua_AddCha_New' or name=='lua_AddCha_NewEx' or name=='lua_AddCha_NewEx_Use_ContrlID' then __sl_addcha_log('[CALL] '..name..'('..a..')') end",
+        "    local r={pcall(fn,...)}",
+        "    __sl_log('[CHAIN_END] '..name..' ok='..tostring(r[1])..' r1='..tostring(r[2]))",
+        "    if not r[1] then error(r[2]) end",
+        "    return unpack(r,2)",
+        "  end",
+        "end",
+        "local function __sl_install_now() for _,n in ipairs(__sl_targets) do local f=rawget(_G,n); if type(f)=='function' then rawset(_G,n,__sl_wrap(n,f)); __sl_log('[CHAIN_WRAP_NOW] '..n) else __sl_log('[CHAIN_WAIT] '..n) end end end",
+        "pcall(__sl_install_now)",
+        "pcall(function() local mt=getmetatable(_G) or {}; local old=mt.__newindex; mt.__newindex=function(t,k,v) if type(k)=='string' and type(v)=='function' then for _,n in ipairs(__sl_targets) do if k==n then __sl_log('[CHAIN_WRAP_FUTURE] '..k); v=__sl_wrap(k,v); break end end end; if old then return old(t,k,v) end; return rawset(t,k,v) end; setmetatable(_G,mt) end)",
+        "__sl_log('[CHAIN_BOOT] passive map-chain diagnostics installed')",
+        "local function __sl_block_exit(name)",
+        "  rawset(_G,'__SL_REAL_EXIT_'..name,rawget(_G,name))",
+        "  rawset(_G,name,function(...) __sl_log('[BLOCK_EXIT] '..name..' args='..__sl_args(...)); return nil end)",
+        "end",
+        "__sl_block_exit('appExit')",
+        "__sl_block_exit('close_net')",
+        "__sl_block_exit('CloseNet')",
+        "__sl_block_exit('CloseNetwork')",
+        "__sl_block_exit('GameEventCloseWindow')",
+        "__sl_block_exit('GameEventCloseNet')",
+        "__sl_block_exit('NotifyOffline')",
+        "local __sl_raw_SetCliffTex = SetCliffTex",
+        "function SetCliffTex(obj, tex)",
+        "  if obj == nil then __sl_log('skip SetCliffTex nil obj '..tostring(tex)); return 0 end",
+        "  if type(__sl_raw_SetCliffTex)=='function' then return __sl_raw_SetCliffTex(obj, tex) end",
+        "  return 0",
+        "end",
         f"function SL10002_RuntimeProtocolInfo() return {{mapid={map_id},control_id={control_id},mode='lan',vip=0,sponsor=0}} end",
     ]
 
@@ -132,12 +381,19 @@ class GameBridge:
         self._prepare_errors = []
 
     def _build_cmdline(self, game_path: Path) -> str:
-        custom_name = f"SL10002_LANV45_10002_{os.getpid()}"
-        return f'"{game_path}" /mapfile={self.map_id} MemoryMapName={custom_name}'
+        # Avoid editor-path side effects from /mapfile= which can trigger
+        # lua_SetCliffTex parameter errors during object loading.
+        return f'"{game_path}" {self.map_id} MemoryMapName=sanguo'
 
     def prepare(self) -> bool:
         """写 config.lua + 编译 map.o/edt2.o."""
         game_dir = self.game_dir
+
+        _repair_ui_dds_from_tga(game_dir)
+        _ensure_effect_aliases(game_dir)
+        _ensure_model_aliases(game_dir)
+        _ensure_terrain_aliases(game_dir)
+        _mirror_sanguo_resources(game_dir)
 
         # 1. V45 config.lua
         write_config_lua_v45(game_dir, self.map_id, self.player_slot, self.options)
@@ -211,18 +467,14 @@ class GameBridge:
 
         # 0c. 启动本地 HostService
         from .host_service import HostService
-        self._host = HostService(self.player_slot, self.player_name)
+        self._host = HostService(
+            player_slot=self.player_slot,
+            player_name=self.player_name,
+            host_ip="127.0.0.1",
+            host_port=self.host_port,
+        )
         self._host.start()
-        time.sleep(0.3)
-
-        # 0d. V49: 确认 TCP 监听成功
-        import socket
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(3)
-        try:
-            s.connect(("127.0.0.1", self.host_port))
-            s.close()
-        except Exception:
+        if not self._host.wait_until_ready(timeout=3.0):
             return False, f"HostService TCP {self.host_port} 监听失败，中止启动"
 
         kernel32 = ctypes.windll.kernel32
@@ -244,8 +496,12 @@ class GameBridge:
         kernel32.UnmapViewOfFile.argtypes = [ctypes.c_void_p]
         kernel32.UnmapViewOfFile.restype = wintypes.BOOL
 
-        # 创建两个 SHM: "10002" 和自定义名
-        for name in [b"10002", custom_name.encode("ascii")]:
+        # 创建多个 SHM 别名，兼容不同启动链路:
+        # - custom_name: 当前桥接链路
+        # - sanguo: 旧链路与外部脚本常用名称
+        # - "10002": 历史实验工具读取
+        shm_names = [b"10002", b"sanguo", custom_name.encode("ascii")]
+        for name in shm_names:
             h = kernel32.CreateFileMappingA(wintypes.HANDLE(-1), None, 0x04, 0,
                                             len(block), name)
             if h:
