@@ -274,6 +274,7 @@ class LauncherWindow(QMainWindow):
         mode_layout = QVBoxLayout(mode_gb)
 
         self._mode_group = QButtonGroup(self)
+        self._current_mode = "single"
         mode_row = QHBoxLayout()
         modes = [
             ("single", "单机本地"),
@@ -385,6 +386,7 @@ class LauncherWindow(QMainWindow):
         self._statusbar.showMessage(msg)
 
     def _on_mode_changed(self, mode: str):
+        self._current_mode = mode
         is_client = (mode == "client")
         self._host_ip.setEnabled(is_client)
         self._host_port.setEnabled(is_client)
@@ -465,14 +467,20 @@ class LauncherWindow(QMainWindow):
             if item.widget():
                 item.widget().deleteLater()
         self._opt_widgets = []
-        for i, opt in enumerate(game_opts[:6]):
+        self._opt_values = []  # 每项的实际整数值
+        for i, opt in enumerate(game_opts[:10]):
             r, c = divmod(i, 2)
             lbl = QLabel(f"{opt['name']}:")
             cmb = QComboBox()
-            for idx, val in enumerate(opt["values"]):
-                cmb.addItem(val, idx)
+            vals = opt["values"]
+            for vi, val_name in enumerate(vals):
+                # 尝试解析整数值，失败则用索引
+                try:
+                    actual_val = int(val_name)
+                except ValueError:
+                    actual_val = vi
+                cmb.addItem(val_name, actual_val)
             cmb.setCurrentIndex(opt["default_index"])
-            cmb.currentIndexChanged.connect(lambda idx, i=i: self._on_opt_changed(i))
             self._opt_grid.addWidget(lbl, r, c * 2)
             self._opt_grid.addWidget(cmb, r, c * 2 + 1)
             self._opt_widgets.append(cmb)
@@ -497,12 +505,16 @@ class LauncherWindow(QMainWindow):
             self._dir_label.setText(str(self.game_dir))
 
     def _get_options_from_ui(self):
+        """返回 11 个选项值: [opt0..opt9, player_index]"""
         opts = []
-        for cmb in self._opt_widgets:
-            opts.append(cmb.currentData() if cmb.currentData() is not None else -1)
+        widgets = getattr(self, "_opt_widgets", [])
+        for cmb in widgets[:10]:
+            data = cmb.currentData()
+            opts.append(data if data is not None else -1)
         while len(opts) < 10:
             opts.append(-1)
-        opts.append(self._player_num_combo.currentData() or 0)
+        player_data = self._player_num_combo.currentData()
+        opts.append(player_data if player_data is not None else 0)
         return opts
 
     def _launch_game(self):
@@ -519,14 +531,7 @@ class LauncherWindow(QMainWindow):
         options = self._get_options_from_ui()
 
         try:
-            # 读取 LAN 设置
-            mode_btn = self._mode_group.checkedButton()
-            mode_map = {"单机本地": "single", "局域网主机": "host", "局域网客户端": "client"}
-            mode = "single"
-            for btn_text, mode_val in mode_map.items():
-                if mode_btn and btn_text in mode_btn.text():
-                    mode = mode_val
-
+            mode = getattr(self, "_current_mode", "single")
             bridge, msg = launch_game(
                 game_dir, map_id, options,
                 self._res_combo.currentIndex(),
