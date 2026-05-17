@@ -178,7 +178,13 @@ class GameBridge:
         return len(self._prepare_errors) == 0
 
     def launch(self) -> tuple:
-        """创建 PlatformBlock SHM + 启动游戏."""
+        """启动 HostService + 创建 PlatformBlock SHM + 启动游戏."""
+        # 0. 启动本地 HostService
+        from .host_service import HostService
+        self._host = HostService(self.player_slot, self.player_name)
+        self._host.start()
+        time.sleep(0.2)  # 等端口就绪
+
         kernel32 = ctypes.windll.kernel32
 
         # 1. PlatformBlock
