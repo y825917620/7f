@@ -1,0 +1,1 @@
+V37A fixes the one-log generator syntax error in V37 and uses distinct v37a log names. Run start_10002.bat, choose 1, then send SL10002_ONE_LOG.txt. Protocol logic remains V37 fast path: ModRuntime disabled, exact 0x025D token echo, continuous 0x0138 TurnStream, 10Hz 0x0133 control.

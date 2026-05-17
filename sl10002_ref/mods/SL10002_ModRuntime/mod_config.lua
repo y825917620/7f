@@ -1,0 +1,32 @@
+-- SL10002 ModRuntime V33 config. ASCII no BOM.
+SL10002_MOD_CONFIG = {
+  enabled=true,
+  dry_run=false,
+  force_overlay=true,
+  original_bridge=true,
+  safe_api_only=true,
+  require_mapinit_done=true,
+  require_game_start=false,
+  post_mapinit_event_delay=1,
+  enable_lowlevel_table_fallback=true,
+  control_id=1,
+  player_id=1,
+  owner=1,
+  base_x=4750,
+  base_y=10650,
+  npc_x=2500,
+  npc_y=8800,
+  wave_x=9700,
+  wave_y=11930,
+  player_x=1439,
+  player_y=800,
+  -- IDs below come from 10002.o disassembly examples, not random probing.
+  selector_sceneobj_candidates={12,4,15,3},
+  base_sceneobj_candidates={12,4,15,3},
+  selector_unit_candidates={109,2188,2189},
+  npc_candidates={109,2188,2189,2054,2057},
+  hero_candidates={2215,2223,2224,2227},
+  wave_candidates={2215,2223,2224,2227},
+  wave_delay_ticks=12,
+  wave_repeat_ticks=12
+}

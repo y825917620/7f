@@ -1,0 +1,1 @@
+SL10002 V37 reconnect/session guard. Based on V36 logs: loading_misc.dds no longer appears in current log_mgr; remaining failure is logicframe=5 disconnect/reconnect failure. This build immediately sends login/session/player/room bundle, mirrors 0x026A as 0x016A, mirrors 0x0265 as 0x0165, keeps 0x025D exact token echo and 0x0138 turn stream. ModRuntime remains disabled.

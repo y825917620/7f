@@ -1,0 +1,1 @@
+V37 protocol clock/delay fastpath: ModRuntime disabled, no AddCha overlay, no old Lua hooks, no V16_BAD UI restore, skip slow resource scan so HostService/game starts immediately. Tests exact 0x025D token echo + continuous turn stream.

@@ -1,0 +1,1 @@
+SL10002 V29 full mod runtime overlay. It attempts to load through compiled edt2.o, config.lua, and scripts bootstrap. It creates selector/base/NPC/wave candidates and traces original hero/wave functions.
